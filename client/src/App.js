@@ -15,7 +15,7 @@ function App() {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:5000/chat", {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/chat`, {
         message,
         secret: process.env.REACT_APP_SECRET,
       });
@@ -63,6 +63,19 @@ function App() {
             }
           }}
         />
+
+        {/* <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Ask something..."
+          rows={2}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              sendMessage();
+            }
+          }}
+        /> */}
 
         <button onClick={sendMessage} disabled={loading}>
           {loading ? "Sending..." : "Send"}
