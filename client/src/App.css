@@ -50,6 +50,14 @@ input {
   border: 1px solid #ccc;
 }
 
+textarea {
+  flex: 1;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  resize: none;
+}
+
 button {
   padding: 10px 16px;
   border: none;
