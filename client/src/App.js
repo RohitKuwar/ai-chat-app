@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import ReactMarkdown from "react-markdown";
 import "./App.css";
 
 function App() {
@@ -44,7 +45,7 @@ function App() {
       <div className="chat-box">
         {chat.map((msg, i) => (
           <div key={i} className={`message ${msg.role}`}>
-            {msg.text}
+            <ReactMarkdown>{msg.text}</ReactMarkdown>
           </div>
         ))}
 

@@ -1,5 +1,9 @@
+body {
+  font-size: 16px;
+}
+
 .app {
-  max-width: 600px;
+  max-width: 800px;
   margin: 40px auto;
   font-family: Arial, sans-serif;
 }
@@ -11,16 +15,17 @@ h2 {
 .chat-box {
   border: 1px solid #ddd;
   padding: 10px;
-  height: 400px;
+  height: 60vh;
   overflow-y: auto;
   background: #f9f9f9;
   border-radius: 8px;
 }
 
 .message {
+  font-size: 0.9rem;
   padding: 8px 12px;
   margin: 8px 0;
-  max-width: 70%;
+  max-width: 80%;
   border-radius: 10px;
   line-height: 1.4;
 }
@@ -37,6 +42,20 @@ h2 {
   margin-right: auto;
 }
 
+.message.ai h3 {
+  margin: 5px 0;
+}
+
+.message.ai p {
+  margin: 5px 0;
+}
+
+.message.ai code {
+  background: #eee;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
 .input-box {
   display: flex;
   margin-top: 10px;
@@ -44,6 +63,7 @@ h2 {
 }
 
 input {
+  font-size: 1rem;
   flex: 1;
   padding: 10px;
   border-radius: 6px;
@@ -51,6 +71,7 @@ input {
 }
 
 textarea {
+  font-size: 1rem;
   flex: 1;
   padding: 10px;
   border-radius: 6px;
@@ -70,4 +91,20 @@ button {
 button:disabled {
   background: #999;
   cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .app {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+
+  .chat-box {
+    height: 65vh;
+  }
+
+  .message {
+    max-width: 90%;
+    font-size: 0.95rem;
+  }
 }
