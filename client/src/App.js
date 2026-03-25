@@ -5,47 +5,51 @@ import "./App.css";
 
 function App() {
   const [message, setMessage] = useState("");
-  const [chat, setChat] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const sendMessage = async () => {
     if (!message.trim() || loading) return;
 
-    const userMessage = { role: "user", text: message };
-    setChat((prev) => [...prev, userMessage]);
+    const userMessage = { role: "user", content: message };
+
+    const updatedMessages = [...messages, userMessage];
+
+    setMessages(updatedMessages);
     setLoading(true);
+
+    console.log("Sending:", updatedMessages);
 
     try {
       const res = await axios.post(`${process.env.REACT_APP_API_URL}/chat`, {
-        message,
+        messages: updatedMessages,
         secret: process.env.REACT_APP_SECRET,
       });
 
-      const aiMessage = { role: "ai", text: res.data.reply };
-      setChat((prev) => [...prev, aiMessage]);
+      const aiReply = res.data.reply;
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: aiReply }
+      ]);
 
     } catch (err) {
-      if (err.response?.status === 429) {
-        alert("Too many requests. Please try later.");
-      } else if (err.response?.status === 403) {
-        alert("Unauthorized request.");
-      } else {
-        alert("Something went wrong.");
-      }
+      console.error(err);
+      alert("Error occurred");
     } finally {
       setLoading(false);
       setMessage("");
     }
-  };
+};
 
   return (
     <div className="app">
       <h2>AI Chat App</h2>
 
       <div className="chat-box">
-        {chat.map((msg, i) => (
-          <div key={i} className={`message ${msg.role}`}>
-            <ReactMarkdown>{msg.text}</ReactMarkdown>
+        {messages.map((msg, i) => (
+          <div key={i} className={`message ${msg.role === "user" ? "user" : "ai"}`}>
+            <ReactMarkdown>{msg.content}</ReactMarkdown>
           </div>
         ))}
 

@@ -25,43 +25,66 @@ const openai = new OpenAI({
 });
 
 /* 🔑 Basic Protection Key */
-const SECRET_KEY = process.env.APP_SECRET || "my-secret-key";
+const SECRET_KEY = process.env.APP_SECRET?.trim() || "my-secret-key";
 
 /* 💬 Chat Endpoint */
 app.post("/chat", async (req, res) => {
   try {
-    const { message, secret } = req.body;
+    const { messages, secret } = req.body;
 
     /* 🔒 Validate Secret */
     if (secret !== SECRET_KEY) {
       return res.status(403).json({ error: "Unauthorized access" });
     }
 
-    if (!message) {
-      return res.status(400).json({ error: "Message is required" });
+    /* ❗ Validate Messages */
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: "Messages are required" });
     }
 
+    console.log("Incoming messages:", messages);
+
+    /* 🤖 OpenAI Chat Call */
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [{ role: "user", content: message }],
+      messages: messages.map(m => ({
+        role: m.role,
+        content: [
+          {
+            type: "text",
+            text: m.content
+          }
+        ]
+      })),
     });
 
-    res.json({
-      reply: response.choices[0].message.content,
-    });
+    const message = response.choices[0].message;
 
-  } catch (error) {
-    console.error("ERROR:", error.message);
+    let reply = "";
 
-    if (error.code === "insufficient_quota") {
-      return res.status(500).json({
-        error: "API quota exceeded. Please try later.",
-      });
+    if (typeof message.content === "string") {
+      reply = message.content;
+    } else if (Array.isArray(message.content)) {
+      reply = message.content.map(c => c.text || "").join("");
     }
 
-    res.status(500).json({ error: "Something went wrong" });
+    res.json({ reply });
+
+  } catch (error) {
+    console.error("ERROR:", error);
+
+    /* 🔍 Better Error Debugging */
+    if (error.response) {
+      console.error("OpenAI Error:", error.response.data);
+    }
+
+    res.status(500).json({
+      error: error.message || "Something went wrong",
+    });
   }
 });
 
 /* 🚀 Start Server */
-app.listen(5000, () => console.log("Server running on port 5000"));
+app.listen(5000, () => {
+  console.log("Server running on port 5000");
+});
