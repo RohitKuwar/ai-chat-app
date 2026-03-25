@@ -28,4 +28,6 @@ npm install
 npm start  
 
 ## 📌 Progress
-- Day 4: Basic chat app created
+- Day 4: Built a full-stack AI chat app using React, Node.js, and OpenAI API
+- Day 5: Implemented chat memory to enable context-aware conversations
+- Day 6: Optimized chat memory by limiting message history and improving performance

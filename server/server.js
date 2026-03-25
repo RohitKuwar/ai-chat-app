@@ -42,20 +42,15 @@ app.post("/chat", async (req, res) => {
       return res.status(400).json({ error: "Messages are required" });
     }
 
-    console.log("Incoming messages:", messages);
+    const systemMessage = {
+      role: "system",
+      content: "You are a helpful AI assistant. Give clear and concise answers."
+    };
 
     /* 🤖 OpenAI Chat Call */
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: messages.map(m => ({
-        role: m.role,
-        content: [
-          {
-            type: "text",
-            text: m.content
-          }
-        ]
-      })),
+      messages: [systemMessage, ...messages],
     });
 
     const message = response.choices[0].message;

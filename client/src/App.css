@@ -23,11 +23,11 @@ h2 {
 
 .message {
   font-size: 0.9rem;
-  padding: 8px 12px;
+  padding: 2px 12px;
   margin: 8px 0;
   max-width: 80%;
   border-radius: 10px;
-  line-height: 1.4;
+  /* line-height: 1.4; */
 }
 
 .message.user {

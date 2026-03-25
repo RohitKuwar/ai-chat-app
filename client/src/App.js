@@ -13,7 +13,12 @@ function App() {
 
     const userMessage = { role: "user", content: message };
 
-    const updatedMessages = [...messages, userMessage];
+    const MAX_MESSAGES = 5;
+
+    const updatedMessages = [
+      ...messages,
+      userMessage
+    ].slice(-MAX_MESSAGES);
 
     setMessages(updatedMessages);
     setLoading(true);
@@ -21,7 +26,7 @@ function App() {
     console.log("Sending:", updatedMessages);
 
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/chat`, {
+      const res = await axios.post(`http://localhost:5000/chat`, {
         messages: updatedMessages,
         secret: process.env.REACT_APP_SECRET,
       });
