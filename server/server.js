@@ -12,74 +12,86 @@ app.use(express.json());
 
 /* 🔐 Rate Limiter */
 const limiter = rateLimit({
-  windowMs: 30 * 60 * 1000, // 30 minutes
-  max: 10, // max 10 requests per IP
-  message: "Too many requests. Please try again later.",
+  windowMs: 30 * 60 * 1000,
+  max: 20,
 });
-
 app.use("/chat", limiter);
+app.use("/summarize", limiter);
 
-/* 🤖 OpenAI Setup */
+/* 🤖 OpenAI */
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-/* 🔑 Basic Protection Key */
-const SECRET_KEY = process.env.APP_SECRET?.trim() || "my-secret-key";
+/* 🔑 Secret */
+const SECRET_KEY = process.env.APP_SECRET?.trim();
 
-/* 💬 Chat Endpoint */
+/* 💬 CHAT API */
 app.post("/chat", async (req, res) => {
   try {
     const { messages, secret } = req.body;
 
-    /* 🔒 Validate Secret */
     if (secret !== SECRET_KEY) {
-      return res.status(403).json({ error: "Unauthorized access" });
+      return res.status(403).json({ error: "Unauthorized" });
     }
 
-    /* ❗ Validate Messages */
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ error: "Messages are required" });
+    if (!messages || !messages.length) {
+      return res.status(400).json({ error: "Messages required" });
     }
 
     const systemMessage = {
       role: "system",
-      content: "You are a helpful AI assistant. Give clear and concise answers."
+      content: "You are a helpful AI assistant. Give clear and concise answers.",
     };
 
-    /* 🤖 OpenAI Chat Call */
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [systemMessage, ...messages],
     });
 
-    const message = response.choices[0].message;
-
-    let reply = "";
-
-    if (typeof message.content === "string") {
-      reply = message.content;
-    } else if (Array.isArray(message.content)) {
-      reply = message.content.map(c => c.text || "").join("");
-    }
+    const reply = response.choices[0].message.content;
 
     res.json({ reply });
 
   } catch (error) {
-    console.error("ERROR:", error);
-
-    /* 🔍 Better Error Debugging */
-    if (error.response) {
-      console.error("OpenAI Error:", error.response.data);
-    }
-
-    res.status(500).json({
-      error: error.message || "Something went wrong",
-    });
+    console.error("CHAT ERROR:", error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-/* 🚀 Start Server */
+/* 🧠 SUMMARIZE API */
+app.post("/summarize", async (req, res) => {
+  try {
+    const { messages, secret } = req.body;
+
+    if (secret !== SECRET_KEY) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const summaryPrompt = [
+      {
+        role: "system",
+        content:
+          "Summarize this conversation in a short paragraph. Keep important details.",
+      },
+      ...messages,
+    ];
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: summaryPrompt,
+    });
+
+    const summary = response.choices[0].message.content;
+
+    res.json({ summary });
+
+  } catch (error) {
+    console.error("SUMMARY ERROR:", error);
+    res.status(500).json({ error: "Summarization failed" });
+  }
+});
+
 app.listen(5000, () => {
   console.log("Server running on port 5000");
 });
