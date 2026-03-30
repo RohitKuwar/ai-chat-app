@@ -1,0 +1,12 @@
+[33m0aa4552[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/feature/auto-summarization[m[33m, [m[1;32mfeature/auto-summarization[m[33m)[m feat: implement message summarization and enhance error handling in chat API
+[33m72efa67[m Merge pull request #5 from RohitKuwar/feature/chat-memory-optimization
+[33m1b8fa8b[m[33m ([m[1;31morigin/feature/chat-memory-optimization[m[33m, [m[1;32mfeature/chat-memory-optimization[m[33m)[m feat: optimize chat memory management and enhance AI response context
+[33m94ed7a2[m Merge pull request #4 from RohitKuwar/feature/chat-memory
+[33m9018111[m[33m ([m[1;31morigin/feature/chat-memory[m[33m, [m[1;32mfeature/chat-memory[m[33m)[m feat: update chat message handling and improve server error responses
+[33m63b4bce[m Merge pull request #3 from RohitKuwar/feature/api-integration
+[33m31fb125[m[33m ([m[1;31morigin/feature/api-integration[m[33m, [m[1;32mfeature/api-integration[m[33m)[m feat: add react-markdown for rendering markdown in chat messages
+[33m6755566[m Merge pull request #2 from RohitKuwar/feature/api-integration
+[33me3475e3[m Refactor API URL to use environment variable and add textarea for message input
+[33m441d53f[m Merge pull request #1 from RohitKuwar/feature/api-integration
+[33m798a9aa[m Implement API integration with OpenAI and add rate limiting
+[33m425a6e7[m project setup
