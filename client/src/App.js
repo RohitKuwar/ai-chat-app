@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import "./App.css";
@@ -7,6 +7,17 @@ function App() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState("chat");
+  const inputRef = useRef();
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
 
   const SUMMARY_THRESHOLD = 6;
 
@@ -23,7 +34,7 @@ function App() {
       /* 🔥 STEP 1: Summarize if needed */
       if (updatedMessages.length > SUMMARY_THRESHOLD) {
         const summaryRes = await axios.post(
-          `${process.env.REACT_APP_API_URL}/summarize`,
+          `http://localhost:5000/summarize`,
           {
             messages: updatedMessages.slice(0, -3),
             secret: process.env.REACT_APP_SECRET,
@@ -42,9 +53,10 @@ function App() {
 
       /* 🔥 STEP 2: Chat API */
       const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/chat`,
+        `http://localhost:5000/chat`,
         {
           messages: updatedMessages,
+          mode,
           secret: process.env.REACT_APP_SECRET,
         }
       );
@@ -66,56 +78,63 @@ function App() {
   };
 
   return (
-    <div className="app">
+  <div className="app">
+    <div className="chat-container">
+
       <h2>AI Chat App</h2>
 
+      {/* Chat Messages */}
       <div className="chat-box">
         {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`message ${msg.role === "user" ? "user" : "ai"}`}
-          >
+          <div key={i} className={`message ${msg.role === "user" ? "user" : "ai"}`}>
             <ReactMarkdown>{msg.content}</ReactMarkdown>
           </div>
         ))}
 
-        {loading && <div className="message ai">Thinking in steps...</div>}
+        {loading && <div className="message assistant">Thinking...</div>}
+
+        <div ref={chatEndRef} />
       </div>
 
-      <div className="input-box">
-        <input
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Ask something..."
-          disabled={loading}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey && !loading) {
-              e.preventDefault();
-              sendMessage();
-            }
-          }}
-        />
+      {/* Input Area */}
+      <div className="input-wrapper">
+        <div className="input-bar">
 
-        {/* <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Ask something..."
-          rows={2}
-          disabled={loading}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey && !loading) {
-              e.preventDefault();
-              sendMessage();
-            }
-          }}
-        /> */}
+          {/* Mode Dropdown */}
+          <select
+            value={mode}
+            onChange={(e) => setMode(e.target.value)}
+            className="mode-select"
+          >
+            <option value="chat">💬 Chat</option>
+            <option value="code">💻 Code</option>
+            <option value="blog">📝 Blog</option>
+          </select>
 
-        <button onClick={sendMessage} disabled={loading}>
-          {loading ? "Sending..." : "Send"}
-        </button>
+          {/* Input */}
+          <input
+            ref={inputRef}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Ask something..."
+            disabled={loading}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                sendMessage();
+              }
+            }}
+          />
+
+          {/* Send Button */}
+          <button onClick={sendMessage} disabled={loading} className="send-btn">
+            ➤
+          </button>
+
+        </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
 
 export default App;
