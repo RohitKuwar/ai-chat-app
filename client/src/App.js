@@ -79,7 +79,7 @@ function App() {
           </div>
         ))}
 
-        {loading && <div className="message ai">Typing...</div>}
+        {loading && <div className="message ai">Thinking in steps...</div>}
       </div>
 
       <div className="input-box">
