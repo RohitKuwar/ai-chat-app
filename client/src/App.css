@@ -1,110 +1,202 @@
+/* 🌍 Base */
 body {
-  font-size: 16px;
+  margin: 0;
+  background: linear-gradient(135deg, #020617, #0f172a);
+  font-family: system-ui, sans-serif;
 }
 
+/* 🧱 App */
 .app {
-  max-width: 800px;
-  margin: 40px auto;
-  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  height: 100vh;
 }
 
+/* 📦 Container */
+.chat-container {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+/* 🧠 Title */
 h2 {
   text-align: center;
-}
-
-.chat-box {
-  border: 1px solid #ddd;
-  padding: 10px;
-  height: 60vh;
-  overflow-y: auto;
-  background: #f9f9f9;
-  border-radius: 8px;
-}
-
-.message {
-  font-size: 0.9rem;
-  padding: 2px 12px;
-  margin: 8px 0;
-  max-width: 80%;
-  border-radius: 10px;
-  /* line-height: 1.4; */
-}
-
-.message.user {
-  background: #007bff;
   color: white;
-  margin-left: auto;
+  margin-bottom: 12px;
 }
 
-.message.ai {
-  background: #e5e5ea;
-  color: black;
-  margin-right: auto;
-}
-
-.message.ai h3 {
-  margin: 5px 0;
-}
-
-.message.ai p {
-  margin: 5px 0;
-}
-
-.message.ai code {
-  background: #eee;
-  padding: 2px 5px;
-  border-radius: 4px;
-}
-
-.input-box {
+/* 💬 Chat Box */
+.chat-box {
+  flex: 1;
+  overflow-y: auto;
+  background: #111827;
+  border-radius: 10px;
+  padding: 12px;
   display: flex;
-  margin-top: 10px;
+  flex-direction: column;
   gap: 10px;
 }
 
-input {
-  font-size: 1rem;
-  flex: 1;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-textarea {
-  font-size: 1rem;
-  flex: 1;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  resize: none;
-}
-
-button {
-  padding: 10px 16px;
-  border: none;
-  background: #007bff;
+/* 💬 Messages */
+.message {
+  max-width: 80%;
+  padding: 0px 10px;
+  border-radius: 10px;
   color: white;
+  line-height: 1.5;
+  font-size: 14px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.message h1 {
+  font-size: 24px;
+}
+
+.message h2 {
+  font-size: 20px;
+  text-align: left;
+}
+
+/* 🧾 Markdown Fix */
+.message p {
+  margin: 6px 0;
+}
+
+/* 💻 CODE BLOCK FIX (IMPORTANT) */
+.message pre {
+  overflow-x: auto;
+  white-space: pre-wrap;   /* 🔥 allows wrapping */
+  word-break: break-word;
+  background: #020617;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+/* INLINE CODE */
+.message code {
+  background: #020617;
+  padding: 2px 6px;
   border-radius: 6px;
+}
+
+/* 👤 User */
+.message.user {
+  /* align-self: flex-end;
+  background: #2563eb; */
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  margin-left: auto;
+  text-align: left;
+  border-bottom-right-radius: 4px;
+}
+
+/* 🤖 AI */
+.message.ai {
+  /* align-self: flex-start;
+  background: #1f2937; */
+
+  background: #1e293b;
+  color: #e2e8f0;
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
+}
+
+/* 🔥 Scrollbar Styling */
+.chat-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-box::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 10px;
+}
+
+.chat-box::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* 🧾 Input Wrapper */
+.input-wrapper {
+  margin-top: 10px;
+}
+
+/* 🔥 Input Bar (MAIN UPGRADE) */
+.input-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #020617;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+
+/* ✍️ Input */
+.input-bar input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  font-size: 14px;
+}
+
+/* 🔽 Dropdown (Modern Look) */
+.mode-select {
+  background: #1f2937;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 8px;
   cursor: pointer;
+  font-size: 13px;
 }
 
-button:disabled {
-  background: #999;
-  cursor: not-allowed;
+/* 🔘 Send Button */
+.send-btn {
+  background: #2563eb;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+.send-btn:hover {
+  background: #1d4ed8;
+}
+
+/* ✨ Slight Glow Effect */
+.message.assistant {
+  background: #1f2937;
+}
+
+.message.user {
+  background: #2563eb;
+}
+
+/* 📱 Mobile */
 @media (max-width: 600px) {
-  .app {
-    margin-left: 10px;
-    margin-right: 10px;
+  .input-bar {
+    gap: 6px;
   }
 
-  .chat-box {
-    height: 65vh;
-  }
-
-  .message {
-    max-width: 90%;
-    font-size: 0.95rem;
+  .send-btn {
+    width: 32px;
+    height: 32px;
   }
 }

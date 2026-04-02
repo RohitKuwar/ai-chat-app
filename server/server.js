@@ -27,7 +27,7 @@ const openai = new OpenAI({
 /* 🔑 Secret */
 const SECRET_KEY = process.env.APP_SECRET?.trim();
 
-/* 🧠 SUMMARIZE API (Week 2 Day 7) */
+/* 🧠 SUMMARIZE */
 app.post("/summarize", async (req, res) => {
   try {
     const { messages, secret } = req.body;
@@ -36,34 +36,32 @@ app.post("/summarize", async (req, res) => {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    const summaryPrompt = [
-      {
-        role: "system",
-        content:
-          "Summarize this conversation in a short paragraph. Keep important context."
-      },
-      ...messages,
-    ];
-
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: summaryPrompt,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Summarize this conversation briefly with key context."
+        },
+        ...messages,
+      ],
     });
 
-    const summary = response.choices[0].message.content;
+    res.json({
+      summary: response.choices[0].message.content,
+    });
 
-    res.json({ summary });
-
-  } catch (error) {
-    console.error("SUMMARY ERROR:", error);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Summarization failed" });
   }
 });
 
-/* 💬 CHAT API (Week 3 Day 3 — Workflow) */
+/* 💬 CHAT */
 app.post("/chat", async (req, res) => {
   try {
-    const { messages, secret } = req.body;
+    const { messages, secret, mode } = req.body;
 
     if (secret !== SECRET_KEY) {
       return res.status(403).json({ error: "Unauthorized" });
@@ -73,9 +71,47 @@ app.post("/chat", async (req, res) => {
       return res.status(400).json({ error: "Messages required" });
     }
 
-    console.log("Incoming messages:", messages);
+    /* 💻 CODE MODE */
+    if (mode === "code") {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a senior developer. Generate clean code, optimize it, and explain it step-by-step."
+          },
+          ...messages,
+        ],
+      });
 
-    /* 🧠 STEP 1: Intent */
+      return res.json({
+        reply: response.choices[0].message.content,
+      });
+    }
+
+    /* 📝 BLOG MODE */
+    if (mode === "blog") {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content:
+              "Write a detailed blog with headings, examples, and a catchy title."
+          },
+          ...messages,
+        ],
+      });
+
+      return res.json({
+        reply: response.choices[0].message.content,
+      });
+    }
+
+    /* 💬 DEFAULT CHAT MODE (WORKFLOW) */
+
+    // Step 1: Intent
     const intentRes = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -88,15 +124,14 @@ app.post("/chat", async (req, res) => {
     });
 
     const intent = intentRes.choices[0].message.content;
-    console.log("Intent:", intent);
 
-    /* 💬 STEP 2: Answer */
+    // Step 2: Answer
     const answerRes = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: `User intent: ${intent}. Give a clear and helpful answer.`
+          content: `User intent: ${intent}. Provide a clear answer.`
         },
         ...messages
       ],
@@ -104,19 +139,16 @@ app.post("/chat", async (req, res) => {
 
     const answer = answerRes.choices[0].message.content;
 
-    /* 🎨 STEP 3: Format */
+    // Step 3: Format
     const formatRes = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
           content:
-            "Format the response in clean markdown with headings, bullet points."
+            "Format this nicely using markdown (headings, bullet points)."
         },
-        {
-          role: "user",
-          content: answer
-        }
+        { role: "user", content: answer }
       ],
     });
 
@@ -125,14 +157,11 @@ app.post("/chat", async (req, res) => {
     res.json({ reply: final });
 
   } catch (error) {
-    console.error("WORKFLOW ERROR:", error);
-    res.status(500).json({
-      error: error.message || "Something went wrong"
-    });
+    console.error("ERROR:", error);
+    res.status(500).json({ error: "Something went wrong" });
   }
 });
 
-/* 🚀 Start Server */
 app.listen(5000, () => {
   console.log("Server running on port 5000");
 });
