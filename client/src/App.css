@@ -161,6 +161,22 @@ h2 {
   font-size: 13px;
 }
 
+/* 🔘 Clear Chat Button */
+.clear-btn {
+  color: #fff !important;
+  background: transparent;
+  font-size: 20px !important;
+  border: none;
+  color: #94a3b8;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 6px;
+}
+
+.clear-btn:hover {
+  color: #ef4444 !important; /* red on hover */
+}
+
 /* 🔘 Send Button */
 .send-btn {
   background: #2563eb;
@@ -178,6 +194,12 @@ h2 {
 
 .send-btn:hover {
   background: #1d4ed8;
+}
+
+.send-btn:disabled,
+.clear-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ✨ Slight Glow Effect */
