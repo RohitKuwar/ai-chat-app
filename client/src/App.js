@@ -59,7 +59,7 @@ function App() {
       /* 🔥 STEP 1: Summarize if needed */
       if (updatedMessages.length > SUMMARY_THRESHOLD) {
         const summaryRes = await axios.post(
-          `http://localhost:5000/summarize`,
+          `${process.env.REACT_APP_API_URL}/summarize`,
           {
             messages: updatedMessages.slice(0, -3),
             secret: process.env.REACT_APP_SECRET,
@@ -78,7 +78,7 @@ function App() {
 
       /* 🔥 STEP 2: Chat API */
       const res = await axios.post(
-        `http://localhost:5000/chat`,
+        `${process.env.REACT_APP_API_URL}/chat`,
         {
           messages: updatedMessages,
           mode,
