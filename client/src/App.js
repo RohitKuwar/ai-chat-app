@@ -24,26 +24,27 @@ function App() {
 
   /* 🔥 STREAMING FUNCTION */
   const streamResponse = async (text) => {
-    let current = "";
+  // Add empty AI message
+  setMessages((prev) => [
+    ...prev,
+    { role: "assistant", content: "" },
+  ]);
 
-    // Add empty AI message first
-    setMessages((prev) => [
-      ...prev,
-      { role: "assistant", content: "" },
-    ]);
+  for (let i = 0; i < text.length; i++) {
+    const partial = text.slice(0, i + 1); // ✅ safe value
 
-    for (let i = 0; i < text.length; i++) {
-      current += text[i];
+    await new Promise((res) => setTimeout(res, 10));
 
-      await new Promise((res) => setTimeout(res, 10));
-
-      setMessages((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1].content = current;
-        return updated;
-      });
-    }
-  };
+    setMessages((prev) => {
+      const updated = [...prev];
+      updated[updated.length - 1] = {
+        ...updated[updated.length - 1],
+        content: partial,
+      };
+      return updated;
+    });
+  }
+};
 
   const sendMessage = async () => {
     if (!message.trim() || loading) return;
