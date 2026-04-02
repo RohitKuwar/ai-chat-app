@@ -8,9 +8,26 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState("chat");
+  const [isStreaming, setIsStreaming] = useState(false);
 
   const inputRef = useRef();
   const chatEndRef = useRef(null);
+
+  const SUMMARY_THRESHOLD = 6;
+
+  useEffect(() => {
+    const saved = localStorage.getItem("chat_messages");
+
+    if (saved) {
+      setMessages(JSON.parse(saved));
+    }
+  }, []);
+
+  useEffect(() => {
+    if(messages.length > 0) {
+      localStorage.setItem("chat_messages", JSON.stringify(messages));
+    }
+  }, [messages]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -20,10 +37,10 @@ function App() {
     chatEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages, loading]);
 
-  const SUMMARY_THRESHOLD = 6;
-
   /* 🔥 STREAMING FUNCTION */
   const streamResponse = async (text) => {
+    setIsStreaming(true);
+
   // Add empty AI message
   setMessages((prev) => [
     ...prev,
@@ -44,6 +61,8 @@ function App() {
       return updated;
     });
   }
+
+  setIsStreaming(false);
 };
 
   const sendMessage = async () => {
@@ -101,6 +120,13 @@ function App() {
     }
   };
 
+  const clearMessages = () => {
+    if (window.confirm("Do you want to clear chat history?")) {
+      localStorage.removeItem("chat_messages");
+      setMessages([]);
+    }
+  }
+
   return (
     <div className="app">
       <div className="chat-container">
@@ -134,6 +160,7 @@ function App() {
               value={mode}
               onChange={(e) => setMode(e.target.value)}
               className="mode-select"
+              title="select mode"
             >
               <option value="chat">💬 Chat</option>
               <option value="code">💻 Code</option>
@@ -154,11 +181,22 @@ function App() {
               }}
             />
 
+            {/* 🗑 Clear Chat */}
+            <button
+              onClick={clearMessages}
+              disabled={loading || isStreaming}
+              className="clear-btn"
+              title="Clear chat"
+            >
+              🗑
+            </button>
+
             {/* Send Button */}
             <button
               onClick={sendMessage}
-              disabled={loading}
+              disabled={loading || isStreaming}
               className="send-btn"
+              title="send message"
             >
               ➤
             </button>
