@@ -55,7 +55,8 @@ npm start
 - Day 1: Learned AI workflows and breaking complex problems into steps  
 - Day 2: Implemented prompt chaining for structured AI outputs  
 - Day 3: Built AI workflow system (intent detection → response → formatting)  
-- Day 4: Converted chatbot into a multi-feature AI app (Chat / Code / Blog modes)  
+- Day 4: Converted chatbot into a multi-feature AI app (Chat / Code / Blog modes)
+- Day 5: Implemented streaming responses (typing effect) to simulate real-time AI output and improve user experience   
 
 ---
 
