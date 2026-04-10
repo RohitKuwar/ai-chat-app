@@ -72,6 +72,7 @@ app.post("/chat", async (req, res) => {
 
     res.setHeader("Content-Type", "text/plain");
     res.setHeader("Transfer-Encoding", "chunked");
+    res.setHeader("Content-Encoding", "identity");
 
     /* 🧠 SYSTEM PROMPT BASED ON MODE */
     let systemPrompt = "You are a helpful AI assistant.";
