@@ -60,34 +60,6 @@ function App() {
     chatEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages, loading, isStreaming]);
 
-  /* 🔥 STREAMING FUNCTION */
-  const streamResponse = async (text) => {
-    setIsStreaming(true);
-
-  // Add empty AI message
-  setMessages((prev) => [
-    ...prev,
-    { role: "assistant", content: "" },
-  ]);
-
-  for (let i = 0; i < text.length; i++) {
-    const partial = text.slice(0, i + 1); // ✅ safe value
-
-    await new Promise((res) => setTimeout(res, 10));
-
-    setMessages((prev) => {
-      const updated = [...prev];
-      updated[updated.length - 1] = {
-        ...updated[updated.length - 1],
-        content: partial,
-      };
-      return updated;
-    });
-  }
-
-  setIsStreaming(false);
-};
-
   const sendMessage = async () => {
     if (!message.trim() || loading || isStreaming) return;
 
@@ -102,7 +74,7 @@ function App() {
       /* 🔥 STEP 1: Summarize if needed */
       if (updatedMessages.length > SUMMARY_THRESHOLD) {
         const summaryRes = await axios.post(
-          `${process.env.REACT_APP_API_URL}/summarize`,
+          `http://localhost:5000/summarize`,
           {
             messages: updatedMessages.slice(0, -3),
             secret: process.env.REACT_APP_SECRET,
@@ -120,35 +92,67 @@ function App() {
       setMessages(updatedMessages);
 
       /* 🔥 STEP 2: Chat API */
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/chat`,
-        {
+      const response = await fetch(
+      `http://localhost:5000/chat`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           messages: updatedMessages,
           mode,
           secret: process.env.REACT_APP_SECRET,
-        }
-      );
+        }),
+      }
+    );
 
-      const aiReply = res.data.reply;
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
 
-      /* 🔥 STREAM RESPONSE INSTEAD OF DIRECT SET */
-      await streamResponse(aiReply);
+    setMessages((prev) => [
+      ...prev,
+      { role: "assistant", content: "" },
+    ]);
+
+    setIsStreaming(true);
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value);
+
+      setMessages((prev) => {
+        const updated = [...prev];
+
+        updated[updated.length - 1] = {
+          ...updated[updated.length - 1],
+          content: updated[updated.length - 1].content + chunk,
+        };
+
+        return updated;
+      });
+    }
+
+    setIsStreaming(false);
 
     } catch (err) {
       console.error(err);
       alert("Something went wrong");
+      setIsStreaming(false);
     } finally {
       setLoading(false);
-      setMessage("");
     }
   };
 
   const clearMessages = () => {
-    if (window.confirm("Do you want to clear chat history?")) {
-      localStorage.removeItem("chat_messages");
-      setMessages([]);
-    }
-  }
+    if (!window.confirm("Clear chat history?")) return;
+
+    const userId = localStorage.getItem("user_id");
+    localStorage.removeItem(`chat_${userId}`);
+    setMessages([]);
+  };
 
   return (
     <div className="app">
