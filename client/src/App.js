@@ -15,17 +15,40 @@ function App() {
 
   const SUMMARY_THRESHOLD = 6;
 
+  /* 🔐 STEP 1: GENERATE USER ID */
   useEffect(() => {
-    const saved = localStorage.getItem("chat_messages");
+    let userId = localStorage.getItem("user_id");
+
+    if (!userId) {
+      userId = "user_" + Date.now();
+      localStorage.setItem("user_id", userId);
+    }
+  }, []);
+
+  /* 🔥 STEP 2: LOAD USER CHAT */
+  useEffect(() => {
+    const userId = localStorage.getItem("user_id");
+
+    if (!userId) return;
+
+    const saved = localStorage.getItem(`chat_${userId}`);
 
     if (saved) {
       setMessages(JSON.parse(saved));
     }
   }, []);
 
+  /* 💾 STEP 3: SAVE USER CHAT */
   useEffect(() => {
-    if(messages.length > 0) {
-      localStorage.setItem("chat_messages", JSON.stringify(messages));
+    const userId = localStorage.getItem("user_id");
+
+    if (!userId) return;
+
+    if (messages.length > 0) {
+      localStorage.setItem(
+        `chat_${userId}`,
+        JSON.stringify(messages)
+      );
     }
   }, [messages]);
 
@@ -35,7 +58,7 @@ function App() {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "auto" });
-  }, [messages, loading]);
+  }, [messages, loading, isStreaming]);
 
   /* 🔥 STREAMING FUNCTION */
   const streamResponse = async (text) => {
@@ -66,7 +89,7 @@ function App() {
 };
 
   const sendMessage = async () => {
-    if (!message.trim() || loading) return;
+    if (!message.trim() || loading || isStreaming) return;
 
     const userMessage = { role: "user", content: message };
 
