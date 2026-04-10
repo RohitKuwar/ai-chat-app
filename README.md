@@ -62,6 +62,9 @@ npm start
 
 ---
 
+### 🔹 Week 4 — Production-Level AI Systems
+- Day 1: Implemented real-time streaming using OpenAI streaming API and fetch, enabling live AI responses similar to ChatGPT
+
 ## 🚀 Current Capabilities
 
 - 💬 Chat with AI (context-aware)

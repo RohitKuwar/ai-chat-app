@@ -32,7 +32,7 @@ app.post("/summarize", async (req, res) => {
   try {
     const { messages, secret } = req.body;
 
-    if (secret !== SECRET_KEY) {
+    if ((secret || "").trim() !== (SECRET_KEY || "").trim()) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -41,8 +41,7 @@ app.post("/summarize", async (req, res) => {
       messages: [
         {
           role: "system",
-          content:
-            "Summarize this conversation briefly with key context."
+          content: "Summarize this conversation briefly with key context.",
         },
         ...messages,
       ],
@@ -58,12 +57,12 @@ app.post("/summarize", async (req, res) => {
   }
 });
 
-/* 💬 CHAT */
+/* 💬 CHAT (REAL STREAMING) */
 app.post("/chat", async (req, res) => {
   try {
     const { messages, secret, mode } = req.body;
 
-    if (secret !== SECRET_KEY) {
+    if ((secret || "").trim() !== (SECRET_KEY || "").trim()) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -71,94 +70,46 @@ app.post("/chat", async (req, res) => {
       return res.status(400).json({ error: "Messages required" });
     }
 
-    /* 💻 CODE MODE */
+    res.setHeader("Content-Type", "text/plain");
+    res.setHeader("Transfer-Encoding", "chunked");
+
+    /* 🧠 SYSTEM PROMPT BASED ON MODE */
+    let systemPrompt = "You are a helpful AI assistant.";
+
     if (mode === "code") {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are a senior developer. Generate clean code, optimize it, and explain it step-by-step."
-          },
-          ...messages,
-        ],
-      });
-
-      return res.json({
-        reply: response.choices[0].message.content,
-      });
+      systemPrompt =
+        "You are a senior developer. Generate clean code, optimize it, and explain it step-by-step using markdown.";
     }
 
-    /* 📝 BLOG MODE */
     if (mode === "blog") {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content:
-              "Write a detailed blog with headings, examples, and a catchy title."
-          },
-          ...messages,
-        ],
-      });
-
-      return res.json({
-        reply: response.choices[0].message.content,
-      });
+      systemPrompt =
+        "Write a detailed blog with headings, examples, and a catchy title in markdown.";
     }
 
-    /* 💬 DEFAULT CHAT MODE (WORKFLOW) */
-
-    // Step 1: Intent
-    const intentRes = await openai.chat.completions.create({
+    /* 🔥 SINGLE STREAM CALL (OPTIMIZED) */
+    const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: "Identify user intent in one short sentence"
+          content: systemPrompt,
         },
-        ...messages
+        ...messages,
       ],
+      stream: true,
     });
 
-    const intent = intentRes.choices[0].message.content;
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || "";
+      res.write(content);
+    }
 
-    // Step 2: Answer
-    const answerRes = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `User intent: ${intent}. Provide a clear answer.`
-        },
-        ...messages
-      ],
-    });
-
-    const answer = answerRes.choices[0].message.content;
-
-    // Step 3: Format
-    const formatRes = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "Format this nicely using markdown (headings, bullet points)."
-        },
-        { role: "user", content: answer }
-      ],
-    });
-
-    const final = formatRes.choices[0].message.content;
-
-    res.json({ reply: final });
+    res.end();
 
   } catch (error) {
-    console.error("ERROR:", error);
-    res.status(500).json({ error: "Something went wrong" });
+    console.error("STREAM ERROR:", error);
+    res.write("Error generating response");
+    res.end();
   }
 });
 
