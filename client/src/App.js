@@ -139,7 +139,7 @@ function App() {
 
     } catch (err) {
       console.error(err);
-      alert("Something went wrong", err);
+      alert("Something went wrong: " + (err?.message || err));
       setIsStreaming(false);
     } finally {
       setLoading(false);
