@@ -1,20 +1,67 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
+import CodeBlock from "./CodeBlock";
 import "./App.css";
+import {
+  Send,
+  Square,
+  Trash2,
+  MessageSquare,
+  Code,
+  FileText,
+  ChevronDown
+} from "lucide-react";
 
 function App() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState("chat");
+  const [open, setOpen] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-
+  const dropdownRef = useRef(null);
   const inputRef = useRef();
   const chatEndRef = useRef(null);
   const controllerRef = useRef(null);
 
   const SUMMARY_THRESHOLD = 6;
+
+  const selectMode = (value) => {
+    setMode(value);
+    setOpen(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, []);
 
   /* 🔐 STEP 1: GENERATE USER ID */
   useEffect(() => {
@@ -187,7 +234,13 @@ function App() {
               key={i}
               className={`message ${msg.role === "user" ? "user" : "ai"}`}
             >
-              <ReactMarkdown>{msg.content}</ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  code: CodeBlock,
+                }}
+              >
+                {msg.content}
+              </ReactMarkdown>
             </div>
           ))}
 
@@ -203,16 +256,33 @@ function App() {
           <div className="input-bar">
 
             {/* Mode Dropdown */}
-            <select
-              value={mode}
-              onChange={(e) => setMode(e.target.value)}
-              className="mode-select"
-              title="select mode"
-            >
-              <option value="chat">💬 Chat</option>
-              <option value="code">💻 Code</option>
-              <option value="blog">📝 Blog</option>
-            </select>
+            <div className="mode-dropdown" ref={dropdownRef}>
+              <div
+                className="mode-selected"
+                onClick={() => setOpen(!open)}
+              >
+                {mode === "chat" && <MessageSquare size={16} />}
+                {mode === "code" && <Code size={16} />}
+                {mode === "blog" && <FileText size={16} />}
+
+                <span>{mode}</span>
+                <ChevronDown size={14} />
+              </div>
+
+              {open && (
+                <div className="dropdown-menu">
+                  <div onClick={() => selectMode("chat")}>
+                    <MessageSquare size={16} /> Chat
+                  </div>
+                  <div onClick={() => selectMode("code")}>
+                    <Code size={16} /> Code
+                  </div>
+                  <div onClick={() => selectMode("blog")}>
+                    <FileText size={16} /> Blog
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Input */}
             <input
@@ -235,13 +305,13 @@ function App() {
               className="clear-btn"
               title="clear chat"
             >
-              🗑
+              <Trash2 size={18} />
             </button>
 
             {/* Send & Abort Button */}
             {isStreaming ? (
               <button onClick={stopGeneration} className="stop-btn" title="stop generation">
-                ⏹
+                <Square size={18} />
               </button>
             ) : (
               <button
@@ -250,7 +320,7 @@ function App() {
                 className="send-btn"
                 title="send message"
               >
-                ➤
+                <Send size={18} />
               </button>
             )}
 
