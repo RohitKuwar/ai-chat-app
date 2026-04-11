@@ -12,6 +12,7 @@ function App() {
 
   const inputRef = useRef();
   const chatEndRef = useRef(null);
+  const controllerRef = useRef(null);
 
   const SUMMARY_THRESHOLD = 6;
 
@@ -63,6 +64,9 @@ function App() {
   const sendMessage = async () => {
     if (!message.trim() || loading || isStreaming) return;
 
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
     const userMessage = { role: "user", content: message };
 
     let updatedMessages = [...messages, userMessage];
@@ -74,7 +78,7 @@ function App() {
       /* 🔥 STEP 1: Summarize if needed */
       if (updatedMessages.length > SUMMARY_THRESHOLD) {
         const summaryRes = await axios.post(
-          `${process.env.REACT_APP_API_URL}/summarize`,
+          `${process.env.REACT_APP_API_URL}summarize`,
           {
             messages: updatedMessages.slice(0, -3),
             secret: process.env.REACT_APP_SECRET,
@@ -104,6 +108,7 @@ function App() {
           mode,
           secret: process.env.REACT_APP_SECRET,
         }),
+        signal: controller.signal,
       }
     );
 
@@ -118,6 +123,8 @@ function App() {
     setIsStreaming(true);
 
     while (true) {
+      if (controller.signal.aborted) break;
+      
       const { done, value } = await reader.read();
       if (done) break;
 
@@ -138,9 +145,13 @@ function App() {
     setIsStreaming(false);
 
     } catch (err) {
-      console.error(err);
-      alert("Something went wrong: " + (err?.message || err));
-      setIsStreaming(false);
+        if(err.name === "AbortError") {
+        console.log("Request aborted");
+      } else {
+        console.error("Error:", err);
+        alert("Something went wrong: " + (err?.message || err));
+        setIsStreaming(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -152,6 +163,15 @@ function App() {
     const userId = localStorage.getItem("user_id");
     localStorage.removeItem(`chat_${userId}`);
     setMessages([]);
+  };
+
+  const stopGeneration = () => {
+    if (controllerRef.current) {
+      controllerRef.current.abort();
+      controllerRef.current = null;
+    }
+    setIsStreaming(false);
+    setLoading(false);
   };
 
   return (
@@ -213,20 +233,26 @@ function App() {
               onClick={clearMessages}
               disabled={loading || isStreaming}
               className="clear-btn"
-              title="Clear chat"
+              title="clear chat"
             >
               🗑
             </button>
 
-            {/* Send Button */}
-            <button
-              onClick={sendMessage}
-              disabled={loading || isStreaming}
-              className="send-btn"
-              title="send message"
-            >
-              ➤
-            </button>
+            {/* Send & Abort Button */}
+            {isStreaming ? (
+              <button onClick={stopGeneration} className="stop-btn" title="stop generation">
+                ⏹
+              </button>
+            ) : (
+              <button
+                onClick={sendMessage}
+                disabled={loading}
+                className="send-btn"
+                title="send message"
+              >
+                ➤
+              </button>
+            )}
 
           </div>
         </div>
