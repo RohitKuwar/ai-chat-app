@@ -311,7 +311,7 @@ function App() {
             {/* Send & Abort Button */}
             {isStreaming ? (
               <button onClick={stopGeneration} className="stop-btn" title="stop generation">
-                <Square size={18} />
+                <Square fill="red" size={18} />
               </button>
             ) : (
               <button
