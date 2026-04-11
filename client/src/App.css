@@ -79,7 +79,7 @@ h2 {
 
 /* INLINE CODE */
 .message code {
-  background: #020617;
+  /* background: #020617; */
   padding: 2px 6px;
   border-radius: 6px;
 }
@@ -150,15 +150,46 @@ h2 {
   font-size: 14px;
 }
 
-/* 🔽 Dropdown (Modern Look) */
-.mode-select {
-  background: #1f2937;
-  color: white;
-  border: none;
+.mode-dropdown {
+  position: relative;
+}
+
+.mode-selected {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1e293b;
+  padding: 6px 10px;
   border-radius: 8px;
-  padding: 6px 8px;
   cursor: pointer;
-  font-size: 13px;
+  color: #e2e8f0;
+}
+
+/* 🔥 REAL FIX */
+.dropdown-menu {
+  position: absolute;
+  bottom: 110%; /* opens upward */
+  left: 0;
+  width: 120px;
+  background: #0f172a; /* dark */
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+/* Items */
+.dropdown-menu div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: #cbd5f5;
+}
+
+.dropdown-menu div:hover {
+  background: #1e293b;
 }
 
 /* 🔘 Clear Chat Button */
@@ -202,6 +233,62 @@ h2 {
   cursor: not-allowed;
 }
 
+.stop-btn {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* Buttons */
+.send-btn,
+.stop-btn,
+.clear-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.send-btn:hover {
+  color: #3b82f6;
+}
+
+.stop-btn:hover {
+  color: #ef4444;
+}
+
+.clear-btn:hover {
+  color: #f87171;
+}
+
+/* Dropdown wrapper */
+.mode-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1e293b;
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: #cbd5f5;
+}
+
+.mode-wrapper select {
+  background: transparent;
+  border: none;
+  color: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+.mode-wrapper svg:last-child {
+  opacity: 0.6;
+}
+
 /* ✨ Slight Glow Effect */
 .message.assistant {
   background: #1f2937;
@@ -209,6 +296,41 @@ h2 {
 
 .message.user {
   background: #2563eb;
+}
+
+.code-block {
+  margin-top: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #1f2937;
+}
+
+/* Header */
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0f172a;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* Language */
+.code-header .lang {
+  text-transform: lowercase;
+}
+
+/* Copy button */
+.copy-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+}
+
+.copy-btn:hover {
+  color: #ffffff;
 }
 
 /* 📱 Mobile */

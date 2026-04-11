@@ -1,19 +1,67 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
+import CodeBlock from "./CodeBlock";
 import "./App.css";
+import {
+  Send,
+  Square,
+  Trash2,
+  MessageSquare,
+  Code,
+  FileText,
+  ChevronDown
+} from "lucide-react";
 
 function App() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState("chat");
+  const [open, setOpen] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-
+  const dropdownRef = useRef(null);
   const inputRef = useRef();
   const chatEndRef = useRef(null);
+  const controllerRef = useRef(null);
 
   const SUMMARY_THRESHOLD = 6;
+
+  const selectMode = (value) => {
+    setMode(value);
+    setOpen(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, []);
 
   /* 🔐 STEP 1: GENERATE USER ID */
   useEffect(() => {
@@ -63,6 +111,9 @@ function App() {
   const sendMessage = async () => {
     if (!message.trim() || loading || isStreaming) return;
 
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
     const userMessage = { role: "user", content: message };
 
     let updatedMessages = [...messages, userMessage];
@@ -74,7 +125,7 @@ function App() {
       /* 🔥 STEP 1: Summarize if needed */
       if (updatedMessages.length > SUMMARY_THRESHOLD) {
         const summaryRes = await axios.post(
-          `${process.env.REACT_APP_API_URL}/summarize`,
+          `${process.env.REACT_APP_API_URL}summarize`,
           {
             messages: updatedMessages.slice(0, -3),
             secret: process.env.REACT_APP_SECRET,
@@ -104,6 +155,7 @@ function App() {
           mode,
           secret: process.env.REACT_APP_SECRET,
         }),
+        signal: controller.signal,
       }
     );
 
@@ -118,6 +170,8 @@ function App() {
     setIsStreaming(true);
 
     while (true) {
+      if (controller.signal.aborted) break;
+      
       const { done, value } = await reader.read();
       if (done) break;
 
@@ -138,9 +192,13 @@ function App() {
     setIsStreaming(false);
 
     } catch (err) {
-      console.error(err);
-      alert("Something went wrong: " + (err?.message || err));
-      setIsStreaming(false);
+        if(err.name === "AbortError") {
+        console.log("Request aborted");
+      } else {
+        console.error("Error:", err);
+        alert("Something went wrong: " + (err?.message || err));
+        setIsStreaming(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -152,6 +210,15 @@ function App() {
     const userId = localStorage.getItem("user_id");
     localStorage.removeItem(`chat_${userId}`);
     setMessages([]);
+  };
+
+  const stopGeneration = () => {
+    if (controllerRef.current) {
+      controllerRef.current.abort();
+      controllerRef.current = null;
+    }
+    setIsStreaming(false);
+    setLoading(false);
   };
 
   return (
@@ -167,7 +234,13 @@ function App() {
               key={i}
               className={`message ${msg.role === "user" ? "user" : "ai"}`}
             >
-              <ReactMarkdown>{msg.content}</ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  code: CodeBlock,
+                }}
+              >
+                {msg.content}
+              </ReactMarkdown>
             </div>
           ))}
 
@@ -183,16 +256,33 @@ function App() {
           <div className="input-bar">
 
             {/* Mode Dropdown */}
-            <select
-              value={mode}
-              onChange={(e) => setMode(e.target.value)}
-              className="mode-select"
-              title="select mode"
-            >
-              <option value="chat">💬 Chat</option>
-              <option value="code">💻 Code</option>
-              <option value="blog">📝 Blog</option>
-            </select>
+            <div className="mode-dropdown" ref={dropdownRef}>
+              <div
+                className="mode-selected"
+                onClick={() => setOpen(!open)}
+              >
+                {mode === "chat" && <MessageSquare size={16} />}
+                {mode === "code" && <Code size={16} />}
+                {mode === "blog" && <FileText size={16} />}
+
+                <span>{mode}</span>
+                <ChevronDown size={14} />
+              </div>
+
+              {open && (
+                <div className="dropdown-menu">
+                  <div onClick={() => selectMode("chat")}>
+                    <MessageSquare size={16} /> Chat
+                  </div>
+                  <div onClick={() => selectMode("code")}>
+                    <Code size={16} /> Code
+                  </div>
+                  <div onClick={() => selectMode("blog")}>
+                    <FileText size={16} /> Blog
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Input */}
             <input
@@ -213,20 +303,26 @@ function App() {
               onClick={clearMessages}
               disabled={loading || isStreaming}
               className="clear-btn"
-              title="Clear chat"
+              title="clear chat"
             >
-              🗑
+              <Trash2 size={18} />
             </button>
 
-            {/* Send Button */}
-            <button
-              onClick={sendMessage}
-              disabled={loading || isStreaming}
-              className="send-btn"
-              title="send message"
-            >
-              ➤
-            </button>
+            {/* Send & Abort Button */}
+            {isStreaming ? (
+              <button onClick={stopGeneration} className="stop-btn" title="stop generation">
+                <Square size={18} />
+              </button>
+            ) : (
+              <button
+                onClick={sendMessage}
+                disabled={loading}
+                className="send-btn"
+                title="send message"
+              >
+                <Send size={18} />
+              </button>
+            )}
 
           </div>
         </div>
