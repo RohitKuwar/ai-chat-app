@@ -525,6 +525,7 @@ body {
 
 .mode-dropdown {
   position: relative;
+  z-index: 10;
 }
 
 .mode-selected {
