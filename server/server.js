@@ -70,12 +70,14 @@ app.post("/chat", async (req, res) => {
       return res.status(400).json({ error: "Messages required" });
     }
 
-    res.setHeader("Content-Type", "text/plain");
-    res.setHeader("Transfer-Encoding", "chunked");
-    res.setHeader("Content-Encoding", "identity");
+    res.setHeader("Content-Type", "text/plain; charset=utf-8"); // tells browser how to read data
+    res.setHeader("Transfer-Encoding", "chunked"); // enables chunk streaming
+    res.setHeader("Cache-Control", "no-cache"); // prevents caching of streamed data
+    res.setHeader("Connection", "keep-alive"); // keeps stream alive
+    res.setHeader("Content-Encoding", "identity"); // disables compression to allow real-time streaming
 
     /* 🧠 SYSTEM PROMPT BASED ON MODE */
-    let systemPrompt = "You are a helpful AI assistant.";
+    let systemPrompt = "You are a helpful AI assistant. Always respond in clean markdown format with proper spacing.";
 
     if (mode === "code") {
       systemPrompt =

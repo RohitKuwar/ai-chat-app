@@ -1,36 +1,59 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
+import Sidebar from "./Sidebar";
+import MobileSidebar from "./MobileSidebar";
 import CodeBlock from "./CodeBlock";
 import "./App.css";
 import {
   Send,
-  Square,
-  Trash2,
   MessageSquare,
   Code,
   FileText,
-  ChevronDown
+  ChevronDown,
+  CirclePause,
+  Menu
 } from "lucide-react";
 
 function App() {
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]);
+  const [chats, setChats] = useState([]);
+  const [currentChatId, setCurrentChatId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState("chat");
   const [open, setOpen] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobSidebarOpen, setMobSidebarOpen] = useState(false);
+  const [isCreateNewChat, setIsCreateNewChat] = useState(true);
   const dropdownRef = useRef(null);
   const inputRef = useRef();
   const chatEndRef = useRef(null);
   const controllerRef = useRef(null);
+  const fullTextRef = useRef("");
+  const isMobile = window.innerWidth <= 768;
 
   const SUMMARY_THRESHOLD = 6;
+
+  const currentChat = chats.find(c => c.id === currentChatId);
 
   const selectMode = (value) => {
     setMode(value);
     setOpen(false);
   };
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  }
+
+  const mobToggleSidebar = () => {
+    setMobSidebarOpen(!mobSidebarOpen);
+  }
+
+  useEffect(() => {
+    setIsCreateNewChat(true);
+    setCurrentChatId(null);
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -76,29 +99,35 @@ function App() {
   /* 🔥 STEP 2: LOAD USER CHAT */
   useEffect(() => {
     const userId = localStorage.getItem("user_id");
-
-    if (!userId) return;
-
-    const saved = localStorage.getItem(`chat_${userId}`);
+    const saved = localStorage.getItem(`chats_${userId}`);
 
     if (saved) {
-      setMessages(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      setChats(parsed);
+      setCurrentChatId(parsed[0]?.id);
     }
   }, []);
 
   /* 💾 STEP 3: SAVE USER CHAT */
   useEffect(() => {
     const userId = localStorage.getItem("user_id");
-
-    if (!userId) return;
-
-    if (messages.length > 0) {
-      localStorage.setItem(
-        `chat_${userId}`,
-        JSON.stringify(messages)
-      );
+    if (chats.length > 0) {
+      localStorage.setItem(`chats_${userId}`, JSON.stringify(chats));
     }
-  }, [messages]);
+  }, [chats]);
+
+  /* CREATE NEW CHAT */
+  const createNewChat = () => {
+    setIsCreateNewChat(true);
+    const newChat = {
+      id: "chat_" + Date.now(),
+      title: message || "New Chat",
+      messages: []
+    };
+
+    setChats(prev => [newChat, ...prev]);
+    setCurrentChatId(newChat.id);
+  };
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -106,22 +135,28 @@ function App() {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "auto" });
-  }, [messages, loading, isStreaming]);
+  }, [chats, loading, isStreaming]);
 
   const sendMessage = async () => {
-    if (!message.trim() || loading || isStreaming) return;
+    setIsCreateNewChat(false);
+    if (!message.trim() || loading || isStreaming || !currentChat) return;
 
     const controller = new AbortController();
     controllerRef.current = controller;
 
     const userMessage = { role: "user", content: message };
 
-    let updatedMessages = [...messages, userMessage];
+    let updatedMessages = [...currentChat.messages, userMessage];
 
     setLoading(true);
     setMessage('');
 
     try {
+      let title = currentChat.title;
+      if (currentChat.messages.length === 0) {
+        title = message.slice(0, 30);
+      }
+
       /* 🔥 STEP 1: Summarize if needed */
       if (updatedMessages.length > SUMMARY_THRESHOLD) {
         const summaryRes = await axios.post(
@@ -140,7 +175,13 @@ function App() {
         ];
       }
 
-      setMessages(updatedMessages);
+      setChats(prev =>
+        prev.map(chat =>
+          chat.id === currentChatId
+            ? { ...chat, messages: updatedMessages, title }
+            : chat
+        )
+      );
 
       /* 🔥 STEP 2: Chat API */
       const response = await fetch(
@@ -162,13 +203,20 @@ function App() {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
 
-    setMessages((prev) => [
-      ...prev,
-      { role: "assistant", content: "" },
-    ]);
+    setChats(prev =>
+        prev.map(chat =>
+          chat.id === currentChatId
+            ? {
+                ...chat,
+                messages: [...chat.messages, { role: "assistant", content: "" }],
+              }
+            : chat
+        )
+      );
 
     setIsStreaming(true);
 
+    fullTextRef.current = "";
     while (true) {
       if (controller.signal.aborted) break;
       
@@ -176,17 +224,21 @@ function App() {
       if (done) break;
 
       const chunk = decoder.decode(value);
+      fullTextRef.current += chunk;
 
-      setMessages((prev) => {
-        const updated = [...prev];
+      setChats(prev =>
+        prev.map(chat => {
+          if (chat.id !== currentChatId) return chat;
 
-        updated[updated.length - 1] = {
-          ...updated[updated.length - 1],
-          content: updated[updated.length - 1].content + chunk,
-        };
+          const msgs = [...chat.messages];
+          msgs[msgs.length - 1] = {
+            ...msgs[msgs.length - 1],
+            content: fullTextRef.current,
+          };
 
-        return updated;
-      });
+          return { ...chat, messages: msgs };
+        })
+      );
     }
 
     setIsStreaming(false);
@@ -204,12 +256,23 @@ function App() {
     }
   };
 
-  const clearMessages = () => {
-    if (!window.confirm("Clear chat history?")) return;
+  // const clearMessages = () => {
+  //   if (!currentChat) return;
 
-    const userId = localStorage.getItem("user_id");
-    localStorage.removeItem(`chat_${userId}`);
-    setMessages([]);
+  //   setChats(prev =>
+  //     prev.map(chat =>
+  //       chat.id === currentChatId ? { ...chat, messages: [] } : chat
+  //     )
+  //   );
+  // };
+
+  const deleteChat = (id) => {
+    const updated = chats.filter(chat => chat.id !== id);
+    setChats(updated);
+
+    if (currentChatId === id) {
+      setCurrentChatId(updated[0]?.id || null);
+    }
   };
 
   const stopGeneration = () => {
@@ -223,44 +286,80 @@ function App() {
 
   return (
     <div className="app">
-      <div className="chat-container">
+      <div
+        className={`${sidebarOpen ? "sidebar-container" : "sidebar-container-shrink"}`}
+      >
+        <Sidebar
+          sidebarOpen={sidebarOpen}
+          onToggle={toggleSidebar}
+          createNewChat={createNewChat}
+          chats={chats}
+          currentChatId={currentChatId}
+          setCurrentChatId={setCurrentChatId}
+          deleteChat={deleteChat}
+          setIsCreateNewChat={setIsCreateNewChat}
+        />
+      </div>
+      <div
+        className={`${sidebarOpen ? "chat-container" : "chat-container-expand"}`}
+      >
+        {isMobile && (
+          <div className="chat-header">
+            <Menu size={18} className="menu-icon" onClick={() => setMobSidebarOpen(true)} />
+            <span>AI Chat Studio</span>
+          </div>
+        )}
 
-        <h2>AI Chat App</h2>
+        {isMobile && (
+          <div className={`backdrop ${mobSidebarOpen ? "show" : ""}`} onClick={() => setMobSidebarOpen(false)}>
+            <MobileSidebar
+              mobSidebarOpen={mobSidebarOpen}
+              setMobSidebarOpen={setMobSidebarOpen}
+              onToggle={mobToggleSidebar}
+              createNewChat={createNewChat}
+              chats={chats}
+              currentChatId={currentChatId}
+              setCurrentChatId={setCurrentChatId}
+              deleteChat={deleteChat}
+              setIsCreateNewChat={setIsCreateNewChat}
+            />
+          </div>
+        )}
 
-        {/* Chat Messages */}
-        <div className="chat-box">
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`message ${msg.role === "user" ? "user" : "ai"}`}
-            >
-              <ReactMarkdown
-                components={{
-                  code: CodeBlock,
-                }}
+        {isCreateNewChat ? (
+          <div className="welcome-screen">
+            <h1 className="welcome-title">What can I help with?</h1>
+            <p className="welcome-sub">Start a conversation below.</p>
+          </div>
+        ) : (
+          <div className="chat-box">
+            {currentChat?.messages.map((msg, i) => (
+              <div
+                key={i}
+                className={`message ${msg.role === "user" ? "user" : "ai"}`}
               >
-                {msg.content}
-              </ReactMarkdown>
-            </div>
-          ))}
+                <ReactMarkdown
+                  components={{
+                    code: CodeBlock,
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
+              </div>
+            ))}
 
-          {loading && (
-            <div className="message ai">Thinking...</div>
-          )}
+            {loading && <div className="message ai">Thinking...</div>}
 
-          <div ref={chatEndRef} />
-        </div>
+            <div ref={chatEndRef} />
+          </div>
+        )}
 
         {/* Input Area */}
         <div className="input-wrapper">
           <div className="input-bar">
-
             {/* Mode Dropdown */}
             <div className="mode-dropdown" ref={dropdownRef}>
-              <div
-                className="mode-selected"
-                onClick={() => setOpen(!open)}
-              >
+              <div className="mode-selected" onClick={() => setOpen(!open)}>
                 {mode === "chat" && <MessageSquare size={16} />}
                 {mode === "code" && <Code size={16} />}
                 {mode === "blog" && <FileText size={16} />}
@@ -299,19 +398,23 @@ function App() {
             />
 
             {/* 🗑 Clear Chat */}
-            <button
+            {/* <button
               onClick={clearMessages}
               disabled={loading || isStreaming}
               className="clear-btn"
               title="clear chat"
             >
               <Trash2 size={18} />
-            </button>
+            </button> */}
 
             {/* Send & Abort Button */}
             {isStreaming ? (
-              <button onClick={stopGeneration} className="stop-btn" title="stop generation">
-                <Square fill="red" size={18} />
+              <button
+                onClick={stopGeneration}
+                className="stop-btn"
+                title="stop generation"
+              >
+                <CirclePause size={18} />
               </button>
             ) : (
               <button
@@ -323,7 +426,6 @@ function App() {
                 <Send size={18} />
               </button>
             )}
-
           </div>
         </div>
       </div>
