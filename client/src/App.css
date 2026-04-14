@@ -525,7 +525,6 @@ body {
 
 .mode-dropdown {
   position: relative;
-  z-index: 10;
 }
 
 .mode-selected {
@@ -826,7 +825,7 @@ body {
     gap: 6px;
     display: flex;
     align-items: center;
-    overflow: hidden;            /* ← clip anything that tries to escape */
+    overflow: auto;            /* ← clip anything that tries to escape */
   }
 
   /* Prevent input text from pushing the bar wider */
@@ -850,7 +849,6 @@ body {
 
   .dropdown-menu {
     width: 90px;
-    z-index: 100;
   }
 
   /* 8. Messages full width on mobile */
