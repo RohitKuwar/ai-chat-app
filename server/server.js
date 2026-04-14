@@ -27,6 +27,39 @@ const openai = new OpenAI({
 /* 🔑 Secret */
 const SECRET_KEY = process.env.APP_SECRET?.trim();
 
+app.post("/generate-title", async (req, res) => {
+  try {
+    const { message, secret } = req.body;
+
+    if ((secret || "").trim() !== (SECRET_KEY || "").trim()) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "Generate a short, clear title (max 6 words) for this conversation.",
+        },
+        {
+          role: "user",
+          content: message,
+        },
+      ],
+    });
+
+    const title = response.choices[0].message.content;
+
+    res.json({ title });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Title generation failed" });
+  }
+});
+
 /* 🧠 SUMMARIZE */
 app.post("/summarize", async (req, res) => {
   try {
