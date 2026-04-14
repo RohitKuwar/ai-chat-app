@@ -161,6 +161,7 @@ function App() {
   };
 
   const sendMessage = async () => {
+    alert(" send clicked");
     setIsCreateNewChat(false);
     if (!message.trim() || loading || isStreaming || !currentChat) return;
 
