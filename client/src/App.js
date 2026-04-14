@@ -12,7 +12,8 @@ import {
   FileText,
   ChevronDown,
   CirclePause,
-  Menu
+  Menu,
+  X
 } from "lucide-react";
 
 function App() {
@@ -332,7 +333,13 @@ function App() {
       >
         {isMobile && (
           <div className="chat-header">
-            <Menu size={18} className="menu-icon" onClick={() => setMobSidebarOpen(true)} />
+            {
+              mobSidebarOpen ? (
+                <X size={16} onClick={mobToggleSidebar} title="Close menu" />
+              ) : (
+                <Menu size={16} onClick={mobToggleSidebar} title="Open menu" />
+              )
+            }
             <span>AI Chat Studio</span>
           </div>
         )}

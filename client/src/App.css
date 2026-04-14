@@ -737,6 +737,10 @@ body {
     box-sizing: border-box;
   }
 
+  .sb-new-chat-wrap {
+  margin-top: 50px;
+}
+
   /* 3. Header — sticks to top, never moves */
   .chat-header {
     position: sticky;
@@ -804,27 +808,43 @@ body {
   /* 6. Input wrapper — sticks to bottom, never moves */
   .input-wrapper {
     flex-shrink: 0;
-    padding: 10px 12px 16px; /* extra bottom for iPhone home bar */
-    /* extra padding for iPhone home indicator */
+    padding: 10px 12px;
     padding-bottom: max(16px, env(safe-area-inset-bottom));
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     background: linear-gradient(135deg, #020617, #0f172a);
     box-sizing: border-box;
     margin: 0;
+    width: 100%;           /* ← ensure wrapper never exceeds screen */
   }
 
   .input-bar {
     width: 100% !important;
+    max-width: 100% !important;  /* ← hard cap */
     margin: 0 !important;
-    box-sizing: border-box;
+    box-sizing: border-box;      /* ← padding included in width */
     gap: 6px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;            /* ← clip anything that tries to escape */
+  }
+
+  /* Prevent input text from pushing the bar wider */
+  .input-bar input {
+    min-width: 0;                /* ← critical: flex inputs expand infinitely without this */
+    flex: 1;
   }
 
   /* 7. Smaller buttons on mobile */
   .send-btn,
   .stop-btn {
-    width: 32px !important;
-    height: 32px !important;
+    width: 30px !important;
+    height: 30px !important;
+    flex-shrink: 0;              /* ← don't let it squish, but don't grow either */
+  }
+
+  .clear-btn {
+    flex-shrink: 0;
+    padding: 4px;
   }
 
   .dropdown-menu {

@@ -1,13 +1,9 @@
 import React from 'react';
-import { Plus, MessageSquare, Trash2, X } from 'lucide-react'
+import { Plus, MessageSquare, Trash2 } from 'lucide-react'
 
 function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, createNewChat, chats, currentChatId, setCurrentChatId, deleteChat, setIsCreateNewChat }) {
   return (
     <div className={`mobile-sidebar ${mobSidebarOpen ? "visible" : "hidden"}`}>
-        <div style={{ textAlign: "right", padding: "8px" }}>
-            {/* <h5 style={{ color: "white" }}>Mobile Sidebar</h5> */}
-            <X size={16} color='white' onClick={onToggle} />
-        </div>
         <div className="sb-new-chat-wrap">
           <button className="sb-new-chat" onClick={() => {
             createNewChat();
