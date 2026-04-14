@@ -137,6 +137,28 @@ function App() {
     chatEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [chats, loading, isStreaming]);
 
+  const generateTitle = async (msg) => {
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/generate-title`,
+        {
+          message: msg,
+          secret: process.env.REACT_APP_SECRET,
+        }
+      );
+
+      setChats(prev =>
+        prev.map(chat =>
+          chat.id === currentChatId
+            ? { ...chat, title: res.data.title }
+            : chat
+        )
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const sendMessage = async () => {
     setIsCreateNewChat(false);
     if (!message.trim() || loading || isStreaming || !currentChat) return;
@@ -149,12 +171,17 @@ function App() {
     let updatedMessages = [...currentChat.messages, userMessage];
 
     setLoading(true);
-    setMessage('');
+
+    const currentMessage = message; // capture before clearing
+    setMessage("");
 
     try {
       let title = currentChat.title;
       if (currentChat.messages.length === 0) {
         title = message.slice(0, 30);
+
+        // async AI title (non-blocking)
+        generateTitle(currentMessage);
       }
 
       /* 🔥 STEP 1: Summarize if needed */
