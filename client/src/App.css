@@ -698,71 +698,143 @@ body {
   color: #ffffff;
 }
 
-/* 📱 Mobile */
+/* ══════════════════════════════════════
+   MOBILE — works on all iOS & Android
+══════════════════════════════════════ */
 @media (max-width: 768px) {
+
+  /* 1. Lock the page itself — no body scroll */
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+
   .app {
-    width: 95%;
     width: 100%;
     height: 100vh;
+    height: 100dvh; /* dynamic viewport — accounts for browser chrome */
     overflow: hidden;
   }
-  .chat-header {
-    flex-shrink: 0;
-    padding: 12px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    margin-bottom: 0;
-  }
-  .welcome-screen {
-    flex: 1;
-    min-height: 0;
-  }
-  .welcome-title {
-    font-size: 22px;
-  }
+
   .sidebar-container,
   .sidebar-container-shrink {
-    display: none;
+    display: none !important;
   }
+
+  /* 2. Chat container = full screen column */
   .chat-container,
   .chat-container-expand {
     width: 100% !important;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start; /* ← was center, causing scroll */
-    padding: 0;
+    padding: 0 !important;
     overflow: hidden;
+    position: relative;
     box-sizing: border-box;
   }
+
+  /* 3. Header — sticks to top, never moves */
+  .chat-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #020617, #0f172a);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 0;
+    box-sizing: border-box;
+  }
+
+  .chat-header span {
+    font-size: 15px;
+    font-weight: 500;
+    color: #f1f5f9;
+    margin: 0;
+  }
+
+  .menu-icon {
+    cursor: pointer;
+    color: #9b9b9b;
+    flex-shrink: 0;
+    margin: 0;
+  }
+
+  /* 4. Chat box — scrollable middle, fills all remaining space */
   .chat-box {
-    flex: 1;
+    flex: 1 1 0;          /* grow AND shrink, base 0 */
+    min-height: 0;        /* critical — lets it shrink below content */
     width: 100% !important;
     margin: 0 !important;
     border-radius: 0;
-    padding: 12px;
+    padding: 12px 14px;
     overflow-y: auto;
-    min-height: 0; /* ← critical: allows flex child to shrink below content size */
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* smooth iOS scroll */
     box-sizing: border-box;
-  }
-  .input-wrapper {
-    flex-shrink: 0;
-    padding: 10px 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    margin-top: 0;
     background: transparent;
   }
+
+  /* 5. Welcome screen — fills middle space */
+  .welcome-screen {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+  }
+
+  .welcome-title {
+    font-size: 22px;
+  }
+
+  .welcome-sub {
+    font-size: 13px;
+  }
+
+  /* 6. Input wrapper — sticks to bottom, never moves */
+  .input-wrapper {
+    flex-shrink: 0;
+    padding: 10px 12px 16px; /* extra bottom for iPhone home bar */
+    /* extra padding for iPhone home indicator */
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(135deg, #020617, #0f172a);
+    box-sizing: border-box;
+    margin: 0;
+  }
+
   .input-bar {
     width: 100% !important;
     margin: 0 !important;
     box-sizing: border-box;
     gap: 6px;
   }
-  .send-btn {
-    width: 32px;
-    height: 32px;
+
+  /* 7. Smaller buttons on mobile */
+  .send-btn,
+  .stop-btn {
+    width: 32px !important;
+    height: 32px !important;
   }
+
   .dropdown-menu {
     width: 90px;
+  }
+
+  /* 8. Messages full width on mobile */
+  .message {
+    max-width: 92%;
+    font-size: 14px;
   }
 }
 
