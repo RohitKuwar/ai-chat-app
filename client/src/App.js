@@ -162,7 +162,23 @@ function App() {
 
   const sendMessage = async () => {
     setIsCreateNewChat(false);
-    if (!message.trim() || loading || isStreaming || !currentChat) return;
+
+    if (!message.trim() || loading || isStreaming) return;
+
+  let chat = currentChat;
+
+  // 👉 AUTO CREATE CHAT IF NONE EXISTS
+  if (!chat) {
+    const newChat = {
+      id: "chat_" + Date.now(),
+      title: message || "New Chat",
+      messages: []
+    };
+
+    setChats(prev => [newChat, ...prev]);
+    setCurrentChatId(newChat.id);
+    chat = newChat;
+  }
 
     const controller = new AbortController();
     controllerRef.current = controller;
