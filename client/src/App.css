@@ -548,7 +548,7 @@ body {
   border: 1px solid #1f2937;
   border-radius: 8px;
   overflow: hidden;
-  z-index: 10;
+  z-index: 100;
 }
 
 /* Items */
