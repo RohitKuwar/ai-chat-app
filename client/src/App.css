@@ -825,7 +825,7 @@ body {
     gap: 6px;
     display: flex;
     align-items: center;
-    overflow: auto;            /* ← clip anything that tries to escape */
+    overflow: visible;            /* ← clip anything that tries to escape */
   }
 
   /* Prevent input text from pushing the bar wider */
