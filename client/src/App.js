@@ -393,7 +393,10 @@ function App() {
         )}
 
         {isMobile && (
-          <div className={`backdrop ${mobSidebarOpen ? "show" : ""}`} onClick={() => setMobSidebarOpen(false)}>
+          <div className={`backdrop ${mobSidebarOpen ? "show" : ""}`} onClick={() => {
+            setMobSidebarOpen(false);
+            setSearch("");
+          }}>
             <MobileSidebar
               mobSidebarOpen={mobSidebarOpen}
               setMobSidebarOpen={setMobSidebarOpen}
