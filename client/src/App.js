@@ -27,6 +27,9 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobSidebarOpen, setMobSidebarOpen] = useState(false);
   const [isCreateNewChat, setIsCreateNewChat] = useState(true);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
   const dropdownRef = useRef(null);
   const inputRef = useRef();
   const chatEndRef = useRef(null);
@@ -50,6 +53,30 @@ function App() {
   const mobToggleSidebar = () => {
     setMobSidebarOpen(!mobSidebarOpen);
   }
+
+  const filteredChats = chats.filter(chat =>
+    chat.title.toLowerCase().includes(debouncedSearch.toLowerCase())
+  );
+
+  const highlightText = (text, search) => {
+    if (!search) return text;
+
+    const parts = text.split(new RegExp(`(${search})`, "gi"));
+
+    return parts.map((part, i) =>
+      part.toLowerCase() === search.toLowerCase()
+        ? <span key={i} className="highlight">{part}</span>
+        : part
+    );
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
     setIsCreateNewChat(true);
@@ -339,11 +366,14 @@ function App() {
           sidebarOpen={sidebarOpen}
           onToggle={toggleSidebar}
           createNewChat={createNewChat}
-          chats={chats}
+          search={search}
+          setSearch={setSearch}
+          chats={filteredChats}
           currentChatId={currentChatId}
           setCurrentChatId={setCurrentChatId}
           deleteChat={deleteChat}
           setIsCreateNewChat={setIsCreateNewChat}
+          highlightText={highlightText}
         />
       </div>
       <div
@@ -369,11 +399,14 @@ function App() {
               setMobSidebarOpen={setMobSidebarOpen}
               onToggle={mobToggleSidebar}
               createNewChat={createNewChat}
-              chats={chats}
+              search={search}
+              setSearch={setSearch}
+              chats={filteredChats}
               currentChatId={currentChatId}
               setCurrentChatId={setCurrentChatId}
               deleteChat={deleteChat}
               setIsCreateNewChat={setIsCreateNewChat}
+              highlightText={highlightText}
             />
           </div>
         )}

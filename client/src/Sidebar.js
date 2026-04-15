@@ -1,6 +1,6 @@
-import { PanelLeft, Plus, MessageSquare, Trash2 } from 'lucide-react'
+import { PanelLeft, Plus, MessageSquare, Trash2, Search } from 'lucide-react'
 
-function Sidebar({ sidebarOpen, onToggle, createNewChat, chats, currentChatId, setCurrentChatId, deleteChat, setIsCreateNewChat }) {
+function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chats, currentChatId, setCurrentChatId, deleteChat, setIsCreateNewChat, highlightText }) {
 
   return (
     <div className={`sidebar-inner ${sidebarOpen ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
@@ -25,6 +25,15 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, chats, currentChatId, s
             <Plus size={17} />
           </button>
 
+          {/* Search — click to expand */}
+          <button
+            className="sb-strip-btn"
+            onClick={onToggle}
+            title="Search chats"
+          >
+            <Search size={17} />
+          </button>
+
           {/* Chat history — click to expand */}
           <button
             className="sb-strip-btn"
@@ -46,10 +55,28 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, chats, currentChatId, s
         </div>
       )}
 
+      {/* ── Search bar (expanded only) ── */}
+      {sidebarOpen && (
+        <div className="sb-search">
+          <Search size={14} className="sb-search-icon" />
+          <input
+            type="text"
+            placeholder="Search chats..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="sb-search-input"
+          />
+        </div>
+      )}
+
       {/* ── Chat list (expanded only) ── */}
       {sidebarOpen && (
         <nav className="sb-nav">
-          {chats.map(chat => (
+          {
+            chats.length === 0 ? (
+              <div className="sb-no-chats">No chats found</div>
+            ) : (
+              chats.map(chat => (
           <div
             key={chat.id}
             className={`chat-item ${chat.id === currentChatId ? "active" : ""}`}
@@ -65,7 +92,7 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, chats, currentChatId, s
               // onClick={() => setActiveId(chat.id)}
             >
               <MessageSquare size={13} className="sb-chat-icon" />
-              <span className="sb-chat-title">{chat.title}</span>
+              <span className="sb-chat-title">{highlightText(chat.title, search)}</span>
               <Trash2
                 size={14}
                 className="sb-delete-btn"
@@ -75,7 +102,9 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, chats, currentChatId, s
               />
             </button>
           </div>
-        ))}
+        ))
+            )
+          }
         </nav>
       )}
 
