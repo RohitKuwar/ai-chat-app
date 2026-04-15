@@ -698,6 +698,91 @@ body {
   color: #ffffff;
 }
 
+/* ── Desktop sidebar search ── */
+.sb-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 10px 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.sb-search-icon {
+  color: #5e5e5e;
+  flex-shrink: 0;
+}
+
+.sb-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e2e8f0;
+  font-size: 13px;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.sb-search-input::placeholder {
+  color: #5e5e5e;
+}
+
+.sb-search:focus-within {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* ── Mobile sidebar search ── */
+.mob-sb-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 12px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.mob-sb-search-icon {
+  color: #5e5e5e;
+  flex-shrink: 0;
+}
+
+.mob-sb-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e2e8f0;
+  font-size: 13px;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.mob-sb-search-input::placeholder {
+  color: #5e5e5e;
+}
+
+.sb-no-chats {
+  text-align: center;
+  color: #94a3b8;
+  padding: 12px;
+  font-size: 14px;
+}
+
+.highlight {
+  background: #facc15;
+  color: #000;
+  /* padding: 2px 4px; */
+  border-radius: 4px;
+  font-weight: 500;
+}
+
 /* ══════════════════════════════════════
    MOBILE — works on all iOS & Android
 ══════════════════════════════════════ */
