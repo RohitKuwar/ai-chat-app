@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, MessageSquare, Trash2, Search } from 'lucide-react'
+import { Plus, MessageSquare, Trash2, Search, X } from 'lucide-react'
 
 function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, setSearch, createNewChat, chats, currentChatId, setCurrentChatId, deleteChat, setIsCreateNewChat, highlightText }) {
   return (
@@ -24,6 +24,9 @@ function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, se
             onChange={(e) => setSearch(e.target.value)}
             className="mob-sb-search-input"
           />
+          {search && (
+            <X size={14} className="mob-sb-search-clear" onClick={() => setSearch('')} />
+          )}
         </div>
 
         <nav className="sb-nav">
@@ -39,6 +42,7 @@ function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, se
               setIsCreateNewChat(false);
               setCurrentChatId(chat.id);
               setMobSidebarOpen(false);
+              setSearch("");
             }}
             title={chat.title}
           >

@@ -736,6 +736,17 @@ body {
   background: rgba(255, 255, 255, 0.07);
 }
 
+.mob-sb-search-clear {
+  color: #5e5e5e;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: color 150ms;
+}
+
+.mob-sb-search-clear:hover {
+  color: #e2e8f0;
+}
+
 /* ── Mobile sidebar search ── */
 .mob-sb-search {
   display: flex;

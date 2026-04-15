@@ -1,6 +1,27 @@
-import { PanelLeft, Plus, MessageSquare, Trash2, Search } from 'lucide-react'
+import { useEffect, useRef } from 'react';
+import { PanelLeft, Plus, MessageSquare, Trash2, Search, X } from 'lucide-react'
 
 function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chats, currentChatId, setCurrentChatId, deleteChat, setIsCreateNewChat, highlightText }) {
+
+  const searchRef = useRef(null);
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      const isMac = navigator.platform.toUpperCase().includes("MAC");
+
+      if (
+        (isMac && e.metaKey && e.key === "k") || 
+        (!isMac && e.ctrlKey && e.key === "k")
+      ) {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKey);
+
+    return () => document.removeEventListener("keydown", handleKey);
+  }, []);
 
   return (
     <div className={`sidebar-inner ${sidebarOpen ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
@@ -60,12 +81,17 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
         <div className="sb-search">
           <Search size={14} className="sb-search-icon" />
           <input
+            ref={searchRef}
             type="text"
             placeholder="Search chats..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="sb-search-input"
+            title='Ctrl + K'
           />
+          {search && (
+            <X size={14} className="mob-sb-search-clear" onClick={() => setSearch('')} />
+          )}
         </div>
       )}
 
