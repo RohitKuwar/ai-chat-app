@@ -421,6 +421,7 @@ body {
   word-wrap: break-word;
   overflow-wrap: break-word;
   word-break: break-word;
+  position: relative;
 }
 
 .message h1 {
@@ -794,6 +795,124 @@ body {
   font-weight: 500;
 }
 
+.copy-message {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  cursor: pointer;
+  color: #94a3b8;
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+/* Show on hover of message */
+.message:hover .copy-message {
+  opacity: 1;
+}
+
+.copy-message:hover {
+  color: #3b82f6;
+  transform: scale(1.1);
+}
+
+.copy-chat {
+  cursor: pointer;
+  color: #94a3b8;
+  transition: all 0.2s ease;
+}
+
+.copy-chat:hover {
+  color: #ffffff;
+  transform: scale(1.15);
+}
+
+.export-chat {
+  cursor: pointer;
+  color: #94a3b8;
+  transition: all 0.2s ease;
+}
+
+.export-chat:hover {
+  color: #ffffff;
+  transform: scale(1.15);
+}
+
+.message-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+  justify-content: flex-start;
+}
+
+.copied-icon {
+  color: #22c55e;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+.copied-chat-icon {
+  color: #22c55e;
+  transition: all 0.2s ease;
+}
+
+.message-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+ 
+.user-wrapper {
+  align-items: flex-end;
+}
+
+.ai-wrapper {
+  align-items: flex-start;
+}
+ 
+/* ── Action row below each bubble ── */
+.msg-actions {
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  padding: 0 4px;
+}
+ 
+.message-wrapper:hover .msg-actions {
+  opacity: 1;
+}
+ 
+/* ── Individual action button ── */
+.msg-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  line-height: 1;
+}
+
+.msg-action-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+}
+ 
+.msg-action-btn.copied-feedback {
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.08);
+  cursor: default;
+}
+
 /* ══════════════════════════════════════
    MOBILE — works on all iOS & Android
 ══════════════════════════════════════ */
@@ -951,6 +1070,10 @@ body {
   .message {
     max-width: 92%;
     font-size: 14px;
+  }
+
+  .msg-actions {
+    opacity: 1 !important;
   }
 }
 
