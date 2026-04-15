@@ -13,7 +13,10 @@ import {
   ChevronDown,
   CirclePause,
   Menu,
-  X
+  X,
+  Copy,
+  Download,
+  Check
 } from "lucide-react";
 
 function App() {
@@ -29,6 +32,8 @@ function App() {
   const [isCreateNewChat, setIsCreateNewChat] = useState(true);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [copiedId, setCopiedId] = useState(null);
+  const [copiedChat, setCopiedChat] = useState(false);
 
   const dropdownRef = useRef(null);
   const inputRef = useRef();
@@ -68,6 +73,64 @@ function App() {
         ? <span key={i} className="highlight">{part}</span>
         : part
     );
+  };
+
+  const formatChat = (messages) => {
+    return messages
+      .map(msg => {
+        const role = msg.role === "user" ? "You" : "AI";
+
+        return `
+  ========================
+  ${role}
+  ------------------------
+  ${msg.content}
+  `;
+      })
+      .join("\n");
+  };
+
+  const copyChat = () => {
+    if (!currentChat) return;
+
+    const text = formatChat(currentChat.messages);
+
+    navigator.clipboard.writeText(text);
+  };
+
+  const exportChat = () => {
+    if (!currentChat) return;
+
+    const text = formatChat(currentChat.messages);
+
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${currentChat.title || "chat"}.txt`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCopy = (text, id) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+
+    setTimeout(() => {
+      setCopiedId(null);
+    }, 1500);
+  };
+
+  const handleCopyChat = () => {
+    copyChat(); // your existing function
+
+    setCopiedChat(true);
+
+    setTimeout(() => {
+      setCopiedChat(false);
+    }, 1500);
   };
 
   useEffect(() => {
@@ -424,6 +487,10 @@ function App() {
             {currentChat?.messages.map((msg, i) => (
               <div
                 key={i}
+                className={`message-wrapper ${msg.role === "user" ? "user-wrapper" : "ai-wrapper"}`}
+              >
+              <div
+                // key={i}
                 className={`message ${msg.role === "user" ? "user" : "ai"}`}
               >
                 <ReactMarkdown
@@ -434,11 +501,61 @@ function App() {
                   {msg.content}
                 </ReactMarkdown>
               </div>
+
+              {/* Copy action row — shown on hover below the bubble */}
+                <div className="msg-actions">
+                  {copiedId === i ? (
+                    <span className="msg-action-btn copied-feedback">
+                      <Check size={12} />
+                      <span>Copied</span>
+                    </span>
+                  ) : (
+                    <button
+                      className="msg-action-btn"
+                      title="Copy message"
+                      onClick={() => handleCopy(msg.content, i)}
+                    >
+                      <Copy size={12} />
+                      <span>Copy</span>
+                    </button>
+                  )}
+                </div>
+              </div>
             ))}
 
             {loading && <div className="message ai">Thinking...</div>}
 
             <div ref={chatEndRef} />
+
+            {
+              !isStreaming && (
+                <div className="message-actions">
+                  {copiedChat ? (
+                    <Check
+                      size={16}
+                      className="copied-chat-icon"
+                      title="Chat Copied"
+                      data-tooltip="Chat Copied"
+                    />
+                  ) : (
+                    <Copy
+                      size={16}
+                      onClick={handleCopyChat}
+                      className="copy-chat"
+                      title="Copy Chat"
+                      data-tooltip="Copy Chat"
+                    />
+                  )}
+                  <Download
+                    size={16}
+                    onClick={exportChat}
+                    className="export-chat"
+                    title="Export Chat"
+                    data-tooltip="Export Chat"
+                  />
+                </div>
+              )
+            }
           </div>
         )}
 

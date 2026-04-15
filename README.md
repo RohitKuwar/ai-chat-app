@@ -68,6 +68,7 @@ npm start
 - Day 3: Built chat sessions with sidebar to manage multiple conversations, enabling users to create, switch, and persist chats similar to ChatGPT
 - Day 4: Implemented AI-generated chat titles to automatically create meaningful conversation names, improving user experience and chat organization
 - Day 5: Implemented chat search with debouncing and highlighting, improving navigation and scalability for managing multiple conversations
+- Day 6: Implemented chat export and copy functionality, allowing users to copy full conversations and download chats as text files for better usability and sharing
 
 ## 🚀 Current Capabilities
 
