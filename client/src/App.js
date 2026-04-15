@@ -165,37 +165,39 @@ function App() {
 
     if (!message.trim() || loading || isStreaming) return;
 
-  let chat = currentChat;
+    let chat = currentChat;
 
-  // 👉 AUTO CREATE CHAT IF NONE EXISTS
-  if (!chat) {
-    const newChat = {
-      id: "chat_" + Date.now(),
-      title: message || "New Chat",
-      messages: []
-    };
+    // 👉 AUTO CREATE CHAT IF NONE EXISTS
+    if (!chat) {
+      const newChat = {
+        id: "chat_" + Date.now(),
+        title: message || "New Chat",
+        messages: []
+      };
 
-    setChats(prev => [newChat, ...prev]);
-    setCurrentChatId(newChat.id);
-    chat = newChat;
-  }
+      setChats(prev => [newChat, ...prev]);
+      setCurrentChatId(newChat.id);
+      chat = newChat;
+    }
 
     const controller = new AbortController();
     controllerRef.current = controller;
 
     const userMessage = { role: "user", content: message };
 
-    let updatedMessages = [...currentChat.messages, userMessage];
+    let updatedMessages = [...chat.messages, userMessage];
 
     setLoading(true);
 
     const currentMessage = message; // capture before clearing
     setMessage("");
 
+    const chatId = chat.id; // capture before state updates
+
     try {
-      let title = currentChat.title;
-      if (currentChat.messages.length === 0) {
-        title = message.slice(0, 30);
+      let title = chat.title;
+      if (chat.messages.length === 0) {
+        title = currentMessage.slice(0, 30);
 
         // async AI title (non-blocking)
         generateTitle(currentMessage);
@@ -221,7 +223,7 @@ function App() {
 
       setChats(prev =>
         prev.map(chat =>
-          chat.id === currentChatId
+          chat.id === chatId
             ? { ...chat, messages: updatedMessages, title }
             : chat
         )
@@ -249,7 +251,7 @@ function App() {
 
     setChats(prev =>
         prev.map(chat =>
-          chat.id === currentChatId
+          chat.id === chatId
             ? {
                 ...chat,
                 messages: [...chat.messages, { role: "assistant", content: "" }],
@@ -272,7 +274,7 @@ function App() {
 
       setChats(prev =>
         prev.map(chat => {
-          if (chat.id !== currentChatId) return chat;
+          if (chat.id !== chatId) return chat;
 
           const msgs = [...chat.messages];
           msgs[msgs.length - 1] = {
