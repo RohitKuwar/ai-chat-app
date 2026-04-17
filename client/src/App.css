@@ -913,6 +913,45 @@ body {
   cursor: default;
 }
 
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.suggestions button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5f5;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(6px);
+}
+
+.suggestions button:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #3b82f6;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.dots::after {
+  content: "";
+  animation: dots 1.5s steps(3, end) infinite;
+}
+
+@keyframes dots {
+  0% { content: ""; }
+  33% { content: "."; }
+  66% { content: ".."; }
+  100% { content: "..."; }
+}
+
 /* ══════════════════════════════════════
    MOBILE — works on all iOS & Android
 ══════════════════════════════════════ */
