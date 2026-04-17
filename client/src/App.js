@@ -24,6 +24,7 @@ function App() {
   const [chats, setChats] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isWriting, setIsWriting] = useState(false);
   const [mode, setMode] = useState("chat");
   const [open, setOpen] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -225,8 +226,13 @@ function App() {
   }, []);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "auto" });
-  }, [chats, loading, isStreaming]);
+  if (!currentChat) return;
+
+  // small delay ensures DOM is rendered
+  setTimeout(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, 50);
+}, [currentChat]);
 
   const generateTitle = async (msg) => {
     try {
@@ -278,6 +284,7 @@ function App() {
     let updatedMessages = [...chat.messages, userMessage];
 
     setLoading(true);
+    setIsWriting(false);
 
     const currentMessage = message; // capture before clearing
     setMessage("");
@@ -360,6 +367,12 @@ function App() {
       if (done) break;
 
       const chunk = decoder.decode(value);
+
+      // 🔥 FIRST CHUNK = WRITING START
+      if (!isWriting && chunk.trim() !== "") {
+        setIsWriting(true);
+      }
+
       fullTextRef.current += chunk;
 
       setChats(prev =>
@@ -378,6 +391,7 @@ function App() {
     }
 
     setIsStreaming(false);
+    setIsWriting(false);
 
     } catch (err) {
         if(err.name === "AbortError") {
@@ -480,7 +494,18 @@ function App() {
         {isCreateNewChat ? (
           <div className="welcome-screen">
             <h1 className="welcome-title">What can I help with?</h1>
-            <p className="welcome-sub">Start a conversation below.</p>
+
+            <div className="suggestions">
+              <button onClick={() => setMessage("Explain React hooks")}>
+                Explain React hooks
+              </button>
+              <button onClick={() => setMessage("Write Fibonacci in JS")}>
+                Write Fibonacci in JS
+              </button>
+              <button onClick={() => setMessage("Create a blog on AI")}>
+                Create a blog on AI
+              </button>
+            </div>
           </div>
         ) : (
           <div className="chat-box">
@@ -523,12 +548,28 @@ function App() {
               </div>
             ))}
 
-            {loading && <div className="message ai">Thinking...</div>}
+            {/* {loading && (
+              <div className="message ai typing">
+                Thinking<span className="dots"></span>
+              </div>
+            )} */}
+
+            {loading && !isWriting && (
+              <div className="message ai typing">
+                Thinking<span className="dots"></span>
+              </div>
+            )}
+
+            {isStreaming && isWriting && (
+              <div className="message ai typing">
+                Writing<span className="dots"></span>
+              </div>
+            )}
 
             <div ref={chatEndRef} />
 
             {
-              !isStreaming && (
+              !isStreaming && currentChat?.messages.length > 0 && (
                 <div className="message-actions">
                   {copiedChat ? (
                     <Check
