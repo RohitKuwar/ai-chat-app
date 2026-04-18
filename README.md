@@ -70,6 +70,12 @@ npm start
 - Day 5: Implemented chat search with debouncing and highlighting, improving navigation and scalability for managing multiple conversations
 - Day 6: Implemented chat export and copy functionality, allowing users to copy full conversations and download chats as text files for better usability and sharing
 - Day 7: Focused on improving overall user experience and making the application feel more like a production-ready product.
+
+---
+
+### 🔹 Week 5 — Backend Architecture
+- Day 1: Refactored backend into MVC architecture, added signup/login with JWT authentication, moved AI logic to controllers, fixed env loading issue, and standardized entry file to index.js.
+
 ## 🚀 Current Capabilities
 
 - 💬 Chat with AI (context-aware)
