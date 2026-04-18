@@ -16,8 +16,10 @@ import {
   X,
   Copy,
   Download,
-  Check
+  Check,
+  CircleUserRound
 } from "lucide-react";
+import AuthModal from "./AuthModal";
 
 function App() {
   const [message, setMessage] = useState("");
@@ -35,6 +37,15 @@ function App() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [copiedId, setCopiedId] = useState(null);
   const [copiedChat, setCopiedChat] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!localStorage.getItem("token")
+  );
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
 
   const dropdownRef = useRef(null);
   const inputRef = useRef();
@@ -44,6 +55,7 @@ function App() {
   const isMobile = window.innerWidth <= 768;
 
   const SUMMARY_THRESHOLD = 6;
+  const FREE_CHAT_LIMIT = 5;
 
   const currentChat = chats.find(c => c.id === currentChatId);
 
@@ -133,6 +145,20 @@ function App() {
       setCopiedChat(false);
     }, 1500);
   };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(".profile-container")) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -234,6 +260,14 @@ function App() {
   }, 50);
 }, [currentChat]);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    setIsAuthenticated(false);
+    setShowUserDropdown(false);
+  }
+
   const generateTitle = async (msg) => {
     try {
       const res = await axios.post(
@@ -257,6 +291,13 @@ function App() {
   };
 
   const sendMessage = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token && currentChat?.messages.length >= FREE_CHAT_LIMIT) {
+      setShowAuthModal(true);
+      return;
+    }
+
     setIsCreateNewChat(false);
 
     if (!message.trim() || loading || isStreaming) return;
@@ -465,7 +506,42 @@ function App() {
                 <Menu size={16} onClick={mobToggleSidebar} title="Open menu" />
               )
             }
+            
+            {/* <div style={{ display: "flex", gap: "10px", alignItems: "center" }}> */}
             <span>AI Chat Studio</span>
+
+            {isAuthenticated ? (
+              <div className="profile-container">
+                <CircleUserRound
+                  size={18}
+                  className="profile-icon"
+                  onClick={() => setShowUserDropdown(prev => !prev)}
+                />
+
+                {showUserDropdown && (
+                  <div className="profile-dropdown">
+                    <div className="profile-name">
+                      {user?.name || "User"}
+                    </div>
+
+                    <div
+                      className="profile-logout"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="auth-btn"
+              >
+                Login
+              </button>
+            )}
+          {/* </div> */}
           </div>
         )}
 
@@ -490,6 +566,44 @@ function App() {
             />
           </div>
         )}
+
+        {
+          !isMobile && (
+            <div style={{ position: "absolute", top: "10px", right: "10px" }}>
+              {isAuthenticated ? (
+                <div className="profile-container">
+                  <CircleUserRound
+                    size={20}
+                    className="profile-icon"
+                    onClick={() => setShowUserDropdown(prev => !prev)}
+                  />
+
+                  {showUserDropdown && (
+                    <div className="profile-dropdown">
+                      <div className="profile-name">
+                        {user?.name || "User"}
+                      </div>
+
+                      <div
+                        className="profile-logout"
+                        onClick={handleLogout}
+                      >
+                        Logout
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="auth-btn"
+                >
+                  Login
+                </button>
+              )}
+            </div>
+          )
+        }
 
         {isCreateNewChat ? (
           <div className="welcome-screen">
@@ -675,6 +789,15 @@ function App() {
           </div>
         </div>
       </div>
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={(userData) => {
+          setIsAuthenticated(true);
+          setUser(userData);
+        }}
+      />
     </div>
   );
 }

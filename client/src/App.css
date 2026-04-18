@@ -952,6 +952,133 @@ body {
   100% { content: "..."; }
 }
 
+.auth-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.auth-modal {
+  background: #1c202f;
+  padding: 20px;
+  border-radius: 12px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: white;
+  position: relative;
+}
+
+.auth-modal input {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #41536b;
+  background: transparent;
+  color: white;
+}
+
+.auth-modal button {
+  padding: 10px;
+  background: #2563eb;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+}
+
+.auth-btn {
+  background: transparent;
+  border: 1px solid #334155;
+  color: #cbd5f5;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.close-btn {
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.error-text {
+  color: #f87171;
+  font-size: 12px;
+  margin-top: -6px;
+}
+
+.api-message {
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.api-message.success {
+  color: #4ade80; /* green */
+}
+
+.api-message.error {
+  color: #f87171; /* red */
+}
+
+.profile-wrapper {
+  position: relative;
+}
+
+.profile-container {
+  position: relative;
+  cursor: pointer;
+}
+
+.profile-icon {
+  color: #cbd5f5;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 28px;
+  right: 0;
+  background: #020617;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  width: 100px;
+  padding: 8px 0;
+  z-index: 50;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+}
+
+.profile-name {
+  padding: 6px 10px;
+  font-size: 14px;
+  color: #94a3b8;
+  border-bottom: 1px solid #334155;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-logout {
+  padding: 6px 10px;
+  font-size: 14px;
+  color: #f87171;
+  cursor: pointer;
+}
+
+.profile-logout:hover {
+  background: rgba(248, 113, 113, 0.1);
+}
+
 /* ══════════════════════════════════════
    MOBILE — works on all iOS & Android
 ══════════════════════════════════════ */
