@@ -76,6 +76,7 @@ npm start
 ### 🔹 Week 5 — Backend Architecture
 - Day 1: Refactored backend into MVC architecture, added signup/login with JWT authentication, moved AI logic to controllers, fixed env loading issue, and standardized entry file to index.js.
 - Day 2: Implemented authentication UI using a modal-based approach to maintain seamless chat experience.
+- Day 3: Added JWT auth middleware to protect backend routes and verify users via Authorization headers. Updated frontend to send token with API calls and handle unauthorized access via auth modal.
 
 ## 🚀 Current Capabilities
 

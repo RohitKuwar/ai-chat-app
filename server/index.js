@@ -5,12 +5,11 @@ import connectDB from "./src/config/db.js";
 import authRoutes from "./src/routes/auth.js";
 import aiRoutes from "./src/routes/ai.js";
 import { limiter } from "./src/middlewares/rateLimiter.js";
+import { PORT } from "./src/utils/constants.js";
 
 dotenv.config();
 
-console.log("API se:", process.env.OPENAI_API_KEY);
 const app = express();
-const PORT = 5000;
 
 /* MIDDLEWARES */
 app.use(cors());

@@ -1,1 +1,1 @@
-export const SECRET_KEY = process.env.APP_SECRET?.trim();
+export const PORT = 5000;
