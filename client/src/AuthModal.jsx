@@ -84,7 +84,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
         const url = isLogin ? "/api/auth/login" : "/api/auth/signup";
 
         const res = await axios.post(
-        `http://localhost:5000${url}`,
+        `${process.env.REACT_APP_API_URL}${url}`,
         form
         );
 
