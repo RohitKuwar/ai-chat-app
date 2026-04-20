@@ -53,6 +53,7 @@ function App() {
   const controllerRef = useRef(null);
   const fullTextRef = useRef("");
   const isMobile = window.innerWidth <= 768;
+  const token = localStorage.getItem("token");
 
   const SUMMARY_THRESHOLD = 6;
   const FREE_CHAT_LIMIT = 5;
@@ -268,13 +269,21 @@ function App() {
     setShowUserDropdown(false);
   }
 
+  const userMessageCount = currentChat?.messages.filter(
+    msg => msg.role === "user"
+  ).length;
+
   const generateTitle = async (msg) => {
     try {
       const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/generate-title`,
+        `http://localhost:5000/api/ai/generate-title`,
         {
-          message: msg,
-          secret: process.env.REACT_APP_SECRET,
+          message: msg
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
       );
 
@@ -291,9 +300,7 @@ function App() {
   };
 
   const sendMessage = async () => {
-    const token = localStorage.getItem("token");
-
-    if (!token && currentChat?.messages.length >= FREE_CHAT_LIMIT) {
+    if (!token && userMessageCount >= FREE_CHAT_LIMIT) {
       setShowAuthModal(true);
       return;
     }
@@ -344,10 +351,14 @@ function App() {
       /* 🔥 STEP 1: Summarize if needed */
       if (updatedMessages.length > SUMMARY_THRESHOLD) {
         const summaryRes = await axios.post(
-          `${process.env.REACT_APP_API_URL}/summarize`,
+          `http://localhost:5000/api/ai/summarize`,
           {
-            messages: updatedMessages.slice(0, -3),
-            secret: process.env.REACT_APP_SECRET,
+            messages: updatedMessages.slice(0, -3)
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
           }
         );
 
@@ -369,20 +380,24 @@ function App() {
 
       /* 🔥 STEP 2: Chat API */
       const response = await fetch(
-      `${process.env.REACT_APP_API_URL}/chat`,
+      `http://localhost:5000/api/ai/chat`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
           messages: updatedMessages,
-          mode,
-          secret: process.env.REACT_APP_SECRET,
+          mode
         }),
         signal: controller.signal,
       }
     );
+
+    if (response.status === 401) {
+      setShowAuthModal(true);
+    }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();

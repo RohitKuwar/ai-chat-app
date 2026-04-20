@@ -1,13 +1,8 @@
 import openai from "../config/openai.js";
-import { SECRET_KEY } from "../utils/constants.js";
 
 export const generateTitle = async (req, res) => {
   try {
-    const { message, secret } = req.body;
-
-    if ((secret || "").trim() !== SECRET_KEY) {
-      return res.status(403).json({ error: "Unauthorized" });
-    }
+    const { message } = req.body;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -26,11 +21,7 @@ export const generateTitle = async (req, res) => {
 
 export const summarize = async (req, res) => {
   try {
-    const { messages, secret } = req.body;
-
-    if ((secret || "").trim() !== (SECRET_KEY || "").trim()) {
-      return res.status(403).json({ error: "Unauthorized" });
-    }
+    const { messages } = req.body;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -55,11 +46,7 @@ export const summarize = async (req, res) => {
 
 export const chat = async (req, res) => {
   try {
-    const { messages, secret, mode } = req.body;
-
-    if ((secret || "").trim() !== (SECRET_KEY || "").trim()) {
-      return res.status(403).json({ error: "Unauthorized" });
-    }
+    const { messages, mode } = req.body;
 
     if (!messages || !messages.length) {
       return res.status(400).json({ error: "Messages required" });
