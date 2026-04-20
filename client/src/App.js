@@ -276,7 +276,7 @@ function App() {
   const generateTitle = async (msg) => {
     try {
       const res = await axios.post(
-        `http://localhost:5000/api/ai/generate-title`,
+        `${process.env.REACT_APP_API_URL}/api/ai/generate-title`,
         {
           message: msg
         },
@@ -351,7 +351,7 @@ function App() {
       /* 🔥 STEP 1: Summarize if needed */
       if (updatedMessages.length > SUMMARY_THRESHOLD) {
         const summaryRes = await axios.post(
-          `http://localhost:5000/api/ai/summarize`,
+          `${process.env.REACT_APP_API_URL}/api/ai/summarize`,
           {
             messages: updatedMessages.slice(0, -3)
           },
@@ -380,7 +380,7 @@ function App() {
 
       /* 🔥 STEP 2: Chat API */
       const response = await fetch(
-      `http://localhost:5000/api/ai/chat`,
+      `${process.env.REACT_APP_API_URL}/api/ai/chat`,
       {
         method: "POST",
         headers: {
