@@ -1,9 +1,10 @@
 import express from "express";
-import { saveChat } from "../controllers/chat.js";
+import { saveChat, getChats } from "../controllers/chat.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 router.post("/save", authMiddleware, saveChat);
+router.get("/", authMiddleware, getChats);
 
 export default router;
