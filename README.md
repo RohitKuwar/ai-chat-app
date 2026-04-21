@@ -78,6 +78,7 @@ npm start
 - Day 2: Implemented authentication UI using a modal-based approach to maintain seamless chat experience.
 - Day 3: Added JWT auth middleware to protect backend routes and verify users via Authorization headers. Updated frontend to send token with API calls and handle unauthorized access via auth modal.
 - Day 4: Save chats to MongoDB and link them with userId. Implemented backend API for storing chat conversations.
+- Day 5: Fetch user-specific chats from database and display in sidebar. Replaced localStorage with backend data for authenticated users.
 
 ## 🚀 Current Capabilities
 

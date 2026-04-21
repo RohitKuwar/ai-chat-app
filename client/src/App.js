@@ -39,26 +39,126 @@ function App() {
   const [copiedChat, setCopiedChat] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    !!localStorage.getItem("token")
-  );
+
+  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [isAuthenticated, setIsAuthenticated] = useState(!!token);
   const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : null;
   });
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const dropdownRef = useRef(null);
   const inputRef = useRef();
   const chatEndRef = useRef(null);
   const controllerRef = useRef(null);
   const fullTextRef = useRef("");
-  const isMobile = window.innerWidth <= 768;
-  const token = localStorage.getItem("token");
 
   const SUMMARY_THRESHOLD = 20;
   const FREE_CHAT_LIMIT = 10;
 
-  const currentChat = chats.find(c => c.id === currentChatId);
+  const currentChat = chats.find((c) => c.id === currentChatId);
+
+  // MOBILE
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(".profile-container")) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  /* LOAD DATA (DB vs localStorage) */
+  useEffect(() => {
+    if (token) {
+      fetchChats();
+    } else {
+      const userId = localStorage.getItem("user_id");
+      const saved = localStorage.getItem(`chats_${userId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setChats(parsed);
+        setCurrentChatId(parsed[0]?.id);
+      }
+    }
+  }, [token]);
+
+  /* SAVE LOCAL CHAT (guest only) */
+  useEffect(() => {
+    if (!token && chats.length > 0) {
+      const userId = localStorage.getItem("user_id");
+      localStorage.setItem(`chats_${userId}`, JSON.stringify(chats));
+    }
+  }, [chats, token]);
+
+  /* GENERATE USER ID */ 
+  useEffect(() => {
+    let userId = localStorage.getItem("user_id");
+    if (!userId) {
+      userId = "user_" + Date.now();
+      localStorage.setItem("user_id", userId);
+    }
+  }, []);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (!currentChat) return;
+    setTimeout(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+  }, [currentChat]);
 
   const selectMode = (value) => {
     setMode(value);
@@ -67,14 +167,14 @@ function App() {
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
-  }
+  };
 
   const mobToggleSidebar = () => {
     setMobSidebarOpen(!mobSidebarOpen);
-  }
+  };
 
-  const filteredChats = chats.filter(chat =>
-    chat.title.toLowerCase().includes(debouncedSearch.toLowerCase())
+  const filteredChats = chats.filter((chat) =>
+    chat.title.toLowerCase().includes(debouncedSearch.toLowerCase()),
   );
 
   const highlightText = (text, search) => {
@@ -83,15 +183,19 @@ function App() {
     const parts = text.split(new RegExp(`(${search})`, "gi"));
 
     return parts.map((part, i) =>
-      part.toLowerCase() === search.toLowerCase()
-        ? <span key={i} className="highlight">{part}</span>
-        : part
+      part.toLowerCase() === search.toLowerCase() ? (
+        <span key={i} className="highlight">
+          {part}
+        </span>
+      ) : (
+        part
+      ),
     );
   };
 
   const formatChat = (messages) => {
     return messages
-      .map(msg => {
+      .map((msg) => {
         const role = msg.role === "user" ? "You" : "AI";
 
         return `
@@ -148,151 +252,70 @@ function App() {
   };
 
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (!e.target.closest(".profile-container")) {
-        setShowUserDropdown(false);
-      }
-    };
-
-    document.addEventListener("click", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  useEffect(() => {
     setIsCreateNewChat(true);
     setCurrentChatId(null);
-  }, [])
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
-      ) {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
   }, []);
 
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === "Escape") {
-        setOpen(false);
-      }
-    };
 
-    document.addEventListener("keydown", handleKey);
+  const fetchChats = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/chat`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    return () => {
-      document.removeEventListener("keydown", handleKey);
-    };
-  }, []);
+      const formattedChats = res.data.chats.map((chat) => ({
+        id: chat._id,
+        title: chat.title,
+        messages: chat.messages,
+      }));
 
-  /* 🔐 STEP 1: GENERATE USER ID */
-  useEffect(() => {
-    let userId = localStorage.getItem("user_id");
-
-    if (!userId) {
-      userId = "user_" + Date.now();
-      localStorage.setItem("user_id", userId);
+      setChats(formattedChats);
+      setCurrentChatId(formattedChats[0]?.id);
+    } catch (err) {
+      console.error(err);
     }
-  }, []);
-
-  /* 🔥 STEP 2: LOAD USER CHAT */
-  useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    const saved = localStorage.getItem(`chats_${userId}`);
-
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setChats(parsed);
-      setCurrentChatId(parsed[0]?.id);
-    }
-  }, []);
-
-  /* 💾 STEP 3: SAVE USER CHAT */
-  useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    if (chats.length > 0) {
-      localStorage.setItem(`chats_${userId}`, JSON.stringify(chats));
-    }
-  }, [chats]);
-
-  /* CREATE NEW CHAT */
-  const createNewChat = () => {
-    setIsCreateNewChat(true);
-    const newChat = {
-      id: "chat_" + Date.now(),
-      title: message || "New Chat",
-      messages: []
-    };
-
-    setChats(prev => [newChat, ...prev]);
-    setCurrentChatId(newChat.id);
   };
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-  if (!currentChat) return;
-
-  // small delay ensures DOM is rendered
-  setTimeout(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, 50);
-}, [currentChat]);
-
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-    setIsAuthenticated(false);
-    setShowUserDropdown(false);
-  }
+    localStorage.clear(); 
+    setToken(null); 
+    setUser(null); 
+    setIsAuthenticated(false); 
+    setChats([]); 
+    setCurrentChatId(null);
+  };
 
-  const userMessageCount = currentChat?.messages.filter(
-    msg => msg.role === "user"
-  ).length;
+  const createNewChat = () => {
+    const newChat = {
+      id: "chat_" + Date.now(),
+      title: "New Chat",
+      messages: [],
+    };
+    setChats((prev) => [newChat, ...prev]);
+    setCurrentChatId(newChat.id);
+    setIsCreateNewChat(true);
+  };
 
   const generateTitle = async (msg) => {
     try {
       const res = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/ai/generate-title`,
         {
-          message: msg
+          message: msg,
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
 
-      setChats(prev =>
-        prev.map(chat =>
-          chat.id === currentChatId
-            ? { ...chat, title: res.data.title }
-            : chat
-        )
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === currentChatId ? { ...chat, title: res.data.title } : chat,
+        ),
       );
     } catch (err) {
       console.error(err);
@@ -300,12 +323,14 @@ function App() {
   };
 
   const sendMessage = async () => {
+    const userMessageCount = currentChat?.messages.filter(
+      (m) => m.role === "user",
+    ).length;
+    
     if (!token && userMessageCount >= FREE_CHAT_LIMIT) {
       setShowAuthModal(true);
       return;
     }
-
-    setIsCreateNewChat(false);
 
     if (!message.trim() || loading || isStreaming) return;
 
@@ -313,39 +338,33 @@ function App() {
 
     // 👉 AUTO CREATE CHAT IF NONE EXISTS
     if (!chat) {
-      const newChat = {
-        id: "chat_" + Date.now(),
-        title: message || "New Chat",
-        messages: []
+      chat = { 
+        id: "chat_" + Date.now(), 
+        title: message, 
+        messages: [] 
       };
-
-      setChats(prev => [newChat, ...prev]);
-      setCurrentChatId(newChat.id);
-      chat = newChat;
+      setChats((prev) => [chat, ...prev]);
+      setCurrentChatId(chat.id);
     }
 
     const controller = new AbortController();
     controllerRef.current = controller;
 
+    const chatId = chat.id;
     const userMessage = { role: "user", content: message };
-
     let updatedMessages = [...chat.messages, userMessage];
 
+    setMessage("");
     setLoading(true);
     setIsWriting(false);
-
-    const currentMessage = message; // capture before clearing
-    setMessage("");
-
-    const chatId = chat.id; // capture before state updates
 
     try {
       let title = chat.title;
       if (chat.messages.length === 0) {
-        title = currentMessage.slice(0, 30);
+        title = message.slice(0, 30);
 
         // async AI title (non-blocking)
-        generateTitle(currentMessage);
+        generateTitle(message);
       }
 
       /* 🔥 STEP 1: Summarize if needed */
@@ -353,13 +372,13 @@ function App() {
         const summaryRes = await axios.post(
           `${process.env.REACT_APP_API_URL}/api/ai/summarize`,
           {
-            messages: updatedMessages.slice(0, -3)
+            messages: updatedMessages.slice(0, -3),
           },
           {
             headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
+              Authorization: `Bearer ${token}`,
+            },
+          },
         );
 
         const summary = summaryRes.data.summary;
@@ -370,130 +389,106 @@ function App() {
         ];
       }
 
-      setChats(prev =>
-        prev.map(chat =>
+      setChats((prev) =>
+        prev.map((chat) =>
           chat.id === chatId
             ? { ...chat, messages: updatedMessages, title }
-            : chat
-        )
+            : chat,
+        ),
       );
 
       /* 🔥 STEP 2: Chat API */
       const response = await fetch(
-      `${process.env.REACT_APP_API_URL}/api/ai/chat`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+        `${process.env.REACT_APP_API_URL}/api/ai/chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            messages: updatedMessages,
+            mode,
+          }),
         },
-        body: JSON.stringify({
-          messages: updatedMessages,
-          mode
-        }),
-        signal: controller.signal,
+      );
+
+      if (response.status === 401) {
+        setShowAuthModal(true);
       }
-    );
 
-    if (response.status === 401) {
-      setShowAuthModal(true);
-    }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    setChats(prev =>
-        prev.map(chat =>
+      setChats((prev) =>
+        prev.map((chat) =>
           chat.id === chatId
             ? {
                 ...chat,
                 messages: [...chat.messages, { role: "assistant", content: "" }],
               }
-            : chat
-        )
+            : chat,
+        ),
       );
 
-    setIsStreaming(true);
+      setIsStreaming(true);
+      fullTextRef.current = "";
 
-    fullTextRef.current = "";
-    while (true) {
-      if (controller.signal.aborted) break;
-      
-      const { done, value } = await reader.read();
-      if (done) break;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      const chunk = decoder.decode(value);
+        const chunk = decoder.decode(value);
+        fullTextRef.current += chunk;
 
-      // 🔥 FIRST CHUNK = WRITING START
-      if (!isWriting && chunk.trim() !== "") {
-        setIsWriting(true);
+        // 🔥 FIRST CHUNK = WRITING START
+        // if (!isWriting && chunk.trim() !== "") {
+        //   setIsWriting(true);
+        // }
+
+
+        setChats((prev) =>
+          prev.map((chat) => {
+            if (chat.id !== chatId) return chat;
+            const msgs = [...chat.messages];
+            msgs[msgs.length - 1].content = fullTextRef.current;
+            return { ...chat, messages: msgs };
+          }),
+        );
       }
 
-      fullTextRef.current += chunk;
+      setIsStreaming(false);
+      setIsWriting(false);
 
-      setChats(prev =>
-        prev.map(chat => {
-          if (chat.id !== chatId) return chat;
+      if (token) {
+        const finalChat = chats.find(c => c.id === chatId);
 
-          const msgs = [...chat.messages];
-          msgs[msgs.length - 1] = {
-            ...msgs[msgs.length - 1],
-            content: fullTextRef.current,
-          };
-
-          return { ...chat, messages: msgs };
-        })
-      );
-    }
-
-    setIsStreaming(false);
-    setIsWriting(false);
-
-    if(token) {
-      await axios.post(
-        "http://localhost:5000/api/chat/save",
-        {
-          title: title,
-          messages: fullTextRef.current
-          ? [
-              ...updatedMessages,
-              { role: "assistant", content: fullTextRef.current }
-            ]
-          : updatedMessages,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        if(finalChat) {
+          await axios.post(
+            "http://localhost:5000/api/chat/save",
+            {
+              title: finalChat.title,
+              messages: finalChat.messages
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
         }
-      );
-    }
-
-    } catch (err) {
-        if(err.name === "AbortError") {
-        console.log("Request aborted");
-      } else {
-        console.error("Error:", err);
-        alert("Something went wrong: " + (err?.message || err));
-        setIsStreaming(false);
       }
+    } catch (err) {
+      console.error("Error:", err);
+      setIsStreaming(false);
+      alert("Something went wrong: " + (err?.message || err));
     } finally {
       setLoading(false);
     }
   };
 
-  // const clearMessages = () => {
-  //   if (!currentChat) return;
-
-  //   setChats(prev =>
-  //     prev.map(chat =>
-  //       chat.id === currentChatId ? { ...chat, messages: [] } : chat
-  //     )
-  //   );
-  // };
-
   const deleteChat = (id) => {
-    const updated = chats.filter(chat => chat.id !== id);
+    const updated = chats.filter((chat) => chat.id !== id);
     setChats(updated);
 
     if (currentChatId === id) {
@@ -534,14 +529,12 @@ function App() {
       >
         {isMobile && (
           <div className="chat-header">
-            {
-              mobSidebarOpen ? (
-                <X size={16} onClick={mobToggleSidebar} title="Close menu" />
-              ) : (
-                <Menu size={16} onClick={mobToggleSidebar} title="Open menu" />
-              )
-            }
-            
+            {mobSidebarOpen ? (
+              <X size={16} onClick={mobToggleSidebar} title="Close menu" />
+            ) : (
+              <Menu size={16} onClick={mobToggleSidebar} title="Open menu" />
+            )}
+
             {/* <div style={{ display: "flex", gap: "10px", alignItems: "center" }}> */}
             <span>AI Chat Studio</span>
 
@@ -550,19 +543,14 @@ function App() {
                 <CircleUserRound
                   size={18}
                   className="profile-icon"
-                  onClick={() => setShowUserDropdown(prev => !prev)}
+                  onClick={() => setShowUserDropdown((prev) => !prev)}
                 />
 
                 {showUserDropdown && (
                   <div className="profile-dropdown">
-                    <div className="profile-name">
-                      {user?.name || "User"}
-                    </div>
+                    <div className="profile-name">{user?.name || "User"}</div>
 
-                    <div
-                      className="profile-logout"
-                      onClick={handleLogout}
-                    >
+                    <div className="profile-logout" onClick={handleLogout}>
                       Logout
                     </div>
                   </div>
@@ -576,15 +564,18 @@ function App() {
                 Login
               </button>
             )}
-          {/* </div> */}
+            {/* </div> */}
           </div>
         )}
 
         {isMobile && (
-          <div className={`backdrop ${mobSidebarOpen ? "show" : ""}`} onClick={() => {
-            setMobSidebarOpen(false);
-            setSearch("");
-          }}>
+          <div
+            className={`backdrop ${mobSidebarOpen ? "show" : ""}`}
+            onClick={() => {
+              setMobSidebarOpen(false);
+              setSearch("");
+            }}
+          >
             <MobileSidebar
               mobSidebarOpen={mobSidebarOpen}
               setMobSidebarOpen={setMobSidebarOpen}
@@ -602,43 +593,36 @@ function App() {
           </div>
         )}
 
-        {
-          !isMobile && (
-            <div style={{ position: "absolute", top: "10px", right: "10px" }}>
-              {isAuthenticated ? (
-                <div className="profile-container">
-                  <CircleUserRound
-                    size={20}
-                    className="profile-icon"
-                    onClick={() => setShowUserDropdown(prev => !prev)}
-                  />
+        {!isMobile && (
+          <div style={{ position: "absolute", top: "10px", right: "10px" }}>
+            {isAuthenticated ? (
+              <div className="profile-container">
+                <CircleUserRound
+                  size={20}
+                  className="profile-icon"
+                  onClick={() => setShowUserDropdown((prev) => !prev)}
+                />
 
-                  {showUserDropdown && (
-                    <div className="profile-dropdown">
-                      <div className="profile-name">
-                        {user?.name || "User"}
-                      </div>
+                {showUserDropdown && (
+                  <div className="profile-dropdown">
+                    <div className="profile-name">{user?.name || "User"}</div>
 
-                      <div
-                        className="profile-logout"
-                        onClick={handleLogout}
-                      >
-                        Logout
-                      </div>
+                    <div className="profile-logout" onClick={handleLogout}>
+                      Logout
                     </div>
-                  )}
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="auth-btn"
-                >
-                  Login
-                </button>
-              )}
-            </div>
-          )
-        }
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="auth-btn"
+              >
+                Login
+              </button>
+            )}
+          </div>
+        )}
 
         {isCreateNewChat ? (
           <div className="welcome-screen">
@@ -663,20 +647,20 @@ function App() {
                 key={i}
                 className={`message-wrapper ${msg.role === "user" ? "user-wrapper" : "ai-wrapper"}`}
               >
-              <div
-                // key={i}
-                className={`message ${msg.role === "user" ? "user" : "ai"}`}
-              >
-                <ReactMarkdown
-                  components={{
-                    code: CodeBlock,
-                  }}
+                <div
+                  // key={i}
+                  className={`message ${msg.role === "user" ? "user" : "ai"}`}
                 >
-                  {msg.content}
-                </ReactMarkdown>
-              </div>
+                  <ReactMarkdown
+                    components={{
+                      code: CodeBlock,
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                </div>
 
-              {/* Copy action row — shown on hover below the bubble */}
+                {/* Copy action row — shown on hover below the bubble */}
                 <div className="msg-actions">
                   {copiedId === i ? (
                     <span className="msg-action-btn copied-feedback">
@@ -717,35 +701,33 @@ function App() {
 
             <div ref={chatEndRef} />
 
-            {
-              !isStreaming && currentChat?.messages.length > 0 && (
-                <div className="message-actions">
-                  {copiedChat ? (
-                    <Check
-                      size={16}
-                      className="copied-chat-icon"
-                      title="Chat Copied"
-                      data-tooltip="Chat Copied"
-                    />
-                  ) : (
-                    <Copy
-                      size={16}
-                      onClick={handleCopyChat}
-                      className="copy-chat"
-                      title="Copy Chat"
-                      data-tooltip="Copy Chat"
-                    />
-                  )}
-                  <Download
+            {!isStreaming && currentChat?.messages.length > 0 && (
+              <div className="message-actions">
+                {copiedChat ? (
+                  <Check
                     size={16}
-                    onClick={exportChat}
-                    className="export-chat"
-                    title="Export Chat"
-                    data-tooltip="Export Chat"
+                    className="copied-chat-icon"
+                    title="Chat Copied"
+                    data-tooltip="Chat Copied"
                   />
-                </div>
-              )
-            }
+                ) : (
+                  <Copy
+                    size={16}
+                    onClick={handleCopyChat}
+                    className="copy-chat"
+                    title="Copy Chat"
+                    data-tooltip="Copy Chat"
+                  />
+                )}
+                <Download
+                  size={16}
+                  onClick={exportChat}
+                  className="export-chat"
+                  title="Export Chat"
+                  data-tooltip="Export Chat"
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -829,8 +811,11 @@ function App() {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onSuccess={(userData) => {
-          setIsAuthenticated(true);
+          const newToken = localStorage.getItem("token");
+          setToken(newToken);
           setUser(userData);
+          setIsAuthenticated(true);
+          fetchChats();
         }}
       />
     </div>

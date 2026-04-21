@@ -29,3 +29,20 @@ export const saveChat = async (req, res) => {
     });
   }
 };
+
+export const getChats = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Login required" });
+    }
+
+    const chats = await Chat.find({ userId }).sort({ updatedAt: -1 });
+
+    res.status(200).json({ chats });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
