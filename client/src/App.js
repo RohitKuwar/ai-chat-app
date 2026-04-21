@@ -130,6 +130,7 @@ function App() {
         setCurrentChatId(parsed[0]?.id);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   /* SAVE LOCAL CHAT (guest only) */
@@ -258,10 +259,12 @@ function App() {
 
 
   const fetchChats = async () => {
+    const currentToken = localStorage.getItem("token");
+
     try {
       const res = await axios.get(`http://localhost:5000/api/chat`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${currentToken}`,
         },
       });
 
@@ -442,9 +445,9 @@ function App() {
         fullTextRef.current += chunk;
 
         // 🔥 FIRST CHUNK = WRITING START
-        // if (!isWriting && chunk.trim() !== "") {
-        //   setIsWriting(true);
-        // }
+        if (!isWriting && chunk.trim() !== "") {
+          setIsWriting(true);
+        }
 
 
         setChats((prev) =>
@@ -460,24 +463,54 @@ function App() {
       setIsStreaming(false);
       setIsWriting(false);
 
-      if (token) {
-        const finalChat = chats.find(c => c.id === chatId);
+      // const finalChat = chats.find(c => c.id === chatId);
 
-        if(finalChat) {
-          await axios.post(
-            "http://localhost:5000/api/chat/save",
-            {
-              title: finalChat.title,
-              messages: finalChat.messages
+      // if (!finalChat) return;
+
+      const assistantMessage = { role: "assistant", content: fullTextRef.current };
+
+      const finalMessages = [...updatedMessages, assistantMessage];
+
+      if (token) {
+        if (chatId.startsWith("chat_")) {
+          // 🔥 CREATE
+          const res = await axios.post(`http://localhost:5000/api/chat/save`, {
+            title,
+            messages: finalMessages,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
             },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            },
+          }
+        );
+
+          // 🔥 Replace temp id with DB id
+          const newId = res.data.chat._id;
+
+          setChats(prev =>
+            prev.map(chat =>
+              chat.id === chatId ? { ...chat, id: newId } : chat
+            )
           );
-        }
+
+          setCurrentChatId(newId);
+
+        } else {
+          // 🔥 UPDATE
+          await axios.put(`http://localhost:5000/api/chat/update`, {
+            chatId,
+            title,
+            messages: finalMessages,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
       }
+}
     } catch (err) {
       console.error("Error:", err);
       setIsStreaming(false);
