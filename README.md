@@ -1,4 +1,4 @@
-# AI Chat App (React + OpenAI)
+# AI Chat Studio (React + OpenAI)
 
 ## 🚀 Features
 - Basic chat interface
@@ -77,6 +77,7 @@ npm start
 - Day 1: Refactored backend into MVC architecture, added signup/login with JWT authentication, moved AI logic to controllers, fixed env loading issue, and standardized entry file to index.js.
 - Day 2: Implemented authentication UI using a modal-based approach to maintain seamless chat experience.
 - Day 3: Added JWT auth middleware to protect backend routes and verify users via Authorization headers. Updated frontend to send token with API calls and handle unauthorized access via auth modal.
+- Day 4: Save chats to MongoDB and link them with userId. Implemented backend API for storing chat conversations.
 
 ## 🚀 Current Capabilities
 

@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import connectDB from "./src/config/db.js";
 import authRoutes from "./src/routes/auth.js";
 import aiRoutes from "./src/routes/ai.js";
+import chatRoutes from "./src/routes/chat.js";
 import { limiter } from "./src/middlewares/rateLimiter.js";
 import { PORT } from "./src/utils/constants.js";
 
@@ -26,6 +27,7 @@ app.use(logger);
 /* ROUTES */
 app.use("/api/auth", authRoutes);
 app.use("/api/ai", limiter, aiRoutes);
+app.use("/api/chat", chatRoutes);
 
 const startServer = async () => {
   try {

@@ -3,6 +3,7 @@ import axios from "axios";
 import { X } from "lucide-react";
 
 const AuthModal = ({ isOpen, onClose, onSuccess }) => {
+  const [loading, setLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [form, setForm] = useState({
     name: "",
@@ -80,6 +81,8 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
         return;
     }
 
+    setLoading(true);
+
     try {
         const url = isLogin ? "/api/auth/login" : "/api/auth/signup";
 
@@ -102,8 +105,16 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
     } catch (err) {
         setApiMessage(err.response?.data?.message || "Something went wrong");
         setMessageType("error");
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleKeyDown = (e) => {
+  if (e.key === "Enter") {
+    handleSubmit();
+  }
+};
 
   return (
     <div className="auth-overlay">
@@ -121,12 +132,24 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
         <input name="email" placeholder="Email" onChange={handleChange} />
         {errors.email && <span className="error-text">{errors.email}</span>}
 
-        <input name="password" type="password" placeholder="Password" onChange={handleChange} />
+        <input name="password" type="password" placeholder="Password" onChange={handleChange} onKeyDown={handleKeyDown} />
         {errors.password && <span className="error-text">{errors.password}</span>}
 
         <button onClick={handleSubmit}>
-          {isLogin ? "Login" : "Signup"}
+          {loading ? (
+            <span className="spinner"></span>
+          ) : (
+            isLogin ? "Login" : "Signup"
+          )}
         </button>
+
+        {/* <button type="submit" disabled={loading} onClick={handleSubmit}>
+          {loading ? (
+            <span className="spinner"></span>
+          ) : (
+            isLogin ? "Login" : "Signup"
+          )}
+        </button> */}
 
         <p>
           {isLogin ? "New user?" : "Already have account?"}

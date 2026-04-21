@@ -55,8 +55,8 @@ function App() {
   const isMobile = window.innerWidth <= 768;
   const token = localStorage.getItem("token");
 
-  const SUMMARY_THRESHOLD = 6;
-  const FREE_CHAT_LIMIT = 5;
+  const SUMMARY_THRESHOLD = 20;
+  const FREE_CHAT_LIMIT = 10;
 
   const currentChat = chats.find(c => c.id === currentChatId);
 
@@ -448,6 +448,26 @@ function App() {
 
     setIsStreaming(false);
     setIsWriting(false);
+
+    if(token) {
+      await axios.post(
+        "http://localhost:5000/api/chat/save",
+        {
+          title: title,
+          messages: fullTextRef.current
+          ? [
+              ...updatedMessages,
+              { role: "assistant", content: fullTextRef.current }
+            ]
+          : updatedMessages,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    }
 
     } catch (err) {
         if(err.name === "AbortError") {
