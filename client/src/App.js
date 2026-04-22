@@ -56,7 +56,7 @@ function App() {
   const fullTextRef = useRef("");
 
   const SUMMARY_THRESHOLD = 20;
-  const FREE_CHAT_LIMIT = 10;
+  const FREE_CHAT_LIMIT = 2;
 
   const currentChat = chats.find((c) => c.id === currentChatId);
 
@@ -262,7 +262,7 @@ function App() {
     const currentToken = localStorage.getItem("token");
 
     try {
-      const res = await axios.get(`http://localhost:5000/api/chat`, {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/chat`, {
         headers: {
           Authorization: `Bearer ${currentToken}`,
         },
@@ -291,17 +291,19 @@ function App() {
   };
 
   const createNewChat = () => {
-    const newChat = {
-      id: "chat_" + Date.now(),
-      title: "New Chat",
-      messages: [],
-    };
-    setChats((prev) => [newChat, ...prev]);
-    setCurrentChatId(newChat.id);
+    // const newChat = {
+    //   id: "chat_" + Date.now(),
+    //   title: "New Chat",
+    //   messages: [],
+    // };
+    // setChats((prev) => [newChat, ...prev]);
+    // setCurrentChatId(newChat.id);
+    // setIsCreateNewChat(true);
+    setCurrentChatId(null);
     setIsCreateNewChat(true);
   };
 
-  const generateTitle = async (msg) => {
+  const generateTitle = async (msg, chatId) => {
     try {
       const res = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/ai/generate-title`,
@@ -317,7 +319,7 @@ function App() {
 
       setChats((prev) =>
         prev.map((chat) =>
-          chat.id === currentChatId ? { ...chat, title: res.data.title } : chat,
+          chat.id === chatId ? { ...chat, title: res.data.title } : chat,
         ),
       );
     } catch (err) {
@@ -326,7 +328,12 @@ function App() {
   };
 
   const sendMessage = async () => {
-    const userMessageCount = currentChat?.messages.filter(
+    if (!message.trim() || loading || isStreaming) return;
+
+    let chat = isCreateNewChat ? null : currentChat;
+    let chatId;
+
+    const userMessageCount = chat?.messages?.filter(
       (m) => m.role === "user",
     ).length;
     
@@ -335,25 +342,30 @@ function App() {
       return;
     }
 
-    if (!message.trim() || loading || isStreaming) return;
-
-    let chat = currentChat;
-
-    // 👉 AUTO CREATE CHAT IF NONE EXISTS
+    // AUTO CREATE CHAT IF NONE EXISTS
     if (!chat) {
-      chat = { 
-        id: "chat_" + Date.now(), 
-        title: message, 
-        messages: [] 
+      const newChat = {
+        id: "chat_" + Date.now(),
+        title: message.slice(0, 30),
+        messages: []
       };
-      setChats((prev) => [chat, ...prev]);
-      setCurrentChatId(chat.id);
+
+      setChats(prev => [newChat, ...prev]);
+      setCurrentChatId(newChat.id);
+      setIsCreateNewChat(false);
+
+      chat = newChat;
+      chatId = newChat.id;
+
+      generateTitle(message, newChat.id);
+    } else {
+      chatId = chat.id;
     }
 
     const controller = new AbortController();
     controllerRef.current = controller;
 
-    const chatId = chat.id;
+    // const chatId = chat.id;
     const userMessage = { role: "user", content: message };
     let updatedMessages = [...chat.messages, userMessage];
 
@@ -363,12 +375,6 @@ function App() {
 
     try {
       let title = chat.title;
-      if (chat.messages.length === 0) {
-        title = message.slice(0, 30);
-
-        // async AI title (non-blocking)
-        generateTitle(message);
-      }
 
       /* 🔥 STEP 1: Summarize if needed */
       if (updatedMessages.length > SUMMARY_THRESHOLD) {
@@ -463,10 +469,6 @@ function App() {
       setIsStreaming(false);
       setIsWriting(false);
 
-      // const finalChat = chats.find(c => c.id === chatId);
-
-      // if (!finalChat) return;
-
       const assistantMessage = { role: "assistant", content: fullTextRef.current };
 
       const finalMessages = [...updatedMessages, assistantMessage];
@@ -474,7 +476,7 @@ function App() {
       if (token) {
         if (chatId.startsWith("chat_")) {
           // 🔥 CREATE
-          const res = await axios.post(`http://localhost:5000/api/chat/save`, {
+          const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/chat/save`, {
             title,
             messages: finalMessages,
           },
@@ -498,7 +500,7 @@ function App() {
 
         } else {
           // 🔥 UPDATE
-          await axios.put(`http://localhost:5000/api/chat/update`, {
+          await axios.put(`${process.env.REACT_APP_API_URL}/api/chat/update`, {
             chatId,
             title,
             messages: finalMessages,
@@ -520,13 +522,51 @@ function App() {
     }
   };
 
-  const deleteChat = (id) => {
-    const updated = chats.filter((chat) => chat.id !== id);
-    setChats(updated);
-
-    if (currentChatId === id) {
-      setCurrentChatId(updated[0]?.id || null);
+  const deleteChat = async (chatId) => {
+    if (chatId.startsWith("chat_")) {
+      setChats(prev => prev.filter(c => c.id !== chatId));
+      return;
     }
+
+    if (!token) return;
+
+    await axios.delete(
+      `${process.env.REACT_APP_API_URL}/api/chat/${chatId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setChats(prev => prev.filter(c => c.id !== chatId));
+
+    if (currentChatId === chatId) {
+      setCurrentChatId(null);
+    }
+  };
+
+  const renameChat = async (chatId, newTitle) => {
+    if (!token) return;
+
+    await axios.put(
+      `${process.env.REACT_APP_API_URL}/api/chat/rename`,
+      {
+        chatId,
+        title: newTitle,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setChats(prev =>
+      prev.map(c =>
+        c.id === chatId ? { ...c, title: newTitle } : c
+      )
+    );
   };
 
   const stopGeneration = () => {
@@ -553,8 +593,12 @@ function App() {
           currentChatId={currentChatId}
           setCurrentChatId={setCurrentChatId}
           deleteChat={deleteChat}
+          renameChat={renameChat}
           setIsCreateNewChat={setIsCreateNewChat}
           highlightText={highlightText}
+          setShowAuthModal={setShowAuthModal}
+          token={token}
+          user={user}
         />
       </div>
       <div
@@ -622,6 +666,9 @@ function App() {
               deleteChat={deleteChat}
               setIsCreateNewChat={setIsCreateNewChat}
               highlightText={highlightText}
+              setShowAuthModal={setShowAuthModal}
+              token={token}
+              user={user}
             />
           </div>
         )}
@@ -631,7 +678,7 @@ function App() {
             {isAuthenticated ? (
               <div className="profile-container">
                 <CircleUserRound
-                  size={20}
+                  size={22}
                   className="profile-icon"
                   onClick={() => setShowUserDropdown((prev) => !prev)}
                 />

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Plus, MessageSquare, Trash2, Search, X } from 'lucide-react'
+import { getInitials } from './Utils/getInitials';
 
-function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, setSearch, createNewChat, chats, currentChatId, setCurrentChatId, deleteChat, setIsCreateNewChat, highlightText }) {
+function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, setSearch, createNewChat, chats, currentChatId, setCurrentChatId, deleteChat, setIsCreateNewChat, highlightText, setShowAuthModal, token, user }) {
   return (
     <div className={`mobile-sidebar ${mobSidebarOpen ? "visible" : "hidden"}`}>
         <div className="sb-new-chat-wrap">
@@ -67,6 +68,28 @@ function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, se
             )
           }
         </nav>
+
+      {/* ── Footer ── */}
+      <div className="mob-sb-footer" style={{ marginTop: "auto" }}>
+        {token ? (
+          <div className="sb-footer-user">
+            <span className="sb-footer-avatar">
+              {getInitials(user.name)}
+            </span>
+            <span className="sb-footer-username" title={user.name}>{user.name}</span>
+          </div>
+        ) : (
+          <div className="sb-login-cta">
+            <p>Save your chats & unlock more</p>
+            <button
+              className="sb-footer-login-btn"
+              onClick={() => setShowAuthModal(true)}
+            >
+              Log in
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
