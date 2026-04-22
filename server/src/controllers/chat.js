@@ -77,3 +77,54 @@ export const updateChat = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const deleteChat = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const { chatId } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Login required" });
+    }
+
+    const chat = await Chat.findOneAndDelete({
+      _id: chatId,
+      userId,
+    });
+
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+
+    res.status(200).json({ message: "Chat deleted" });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const renameChat = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const { chatId, title } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Login required" });
+    }
+
+    const chat = await Chat.findOneAndUpdate(
+      { _id: chatId, userId },
+      { title },
+      { new: true }
+    );
+
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+
+    res.status(200).json({ chat });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

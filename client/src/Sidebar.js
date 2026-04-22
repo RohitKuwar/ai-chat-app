@@ -1,8 +1,11 @@
-import { useEffect, useRef } from 'react';
-import { PanelLeft, Plus, MessageSquare, Trash2, Search, X } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react';
+import { PanelLeft, Plus, MessageSquare, Trash2, Search, X, Pencil, User } from 'lucide-react'
+import { getInitials } from './Utils/getInitials';
 
-function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chats, currentChatId, setCurrentChatId, deleteChat, setIsCreateNewChat, highlightText }) {
+function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chats, currentChatId, setCurrentChatId, deleteChat, renameChat, setIsCreateNewChat, highlightText, setShowAuthModal, token, user }) {
 
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
   const searchRef = useRef(null);
 
   useEffect(() => {
@@ -23,9 +26,20 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
     return () => document.removeEventListener("keydown", handleKey);
   }, []);
 
-  return (
-    <div className={`sidebar-inner ${sidebarOpen ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
+  const handleSaveEdit = (chatId) => {
+    if (!editTitle.trim()) {
+      setEditingId(null);
+      return;
+    }
 
+    renameChat(chatId, editTitle.trim());
+    setEditingId(null);
+  };
+
+  return (
+    <div
+      className={`sidebar-inner ${sidebarOpen ? "sidebar-expanded" : "sidebar-collapsed"}`}
+    >
       {/* ── Top: logo + toggle ── */}
       <div className="sb-header">
         {sidebarOpen && <span className="sb-logo">AI Chat Studio</span>}
@@ -38,11 +52,7 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
       {!sidebarOpen && (
         <div className="sb-icon-strip">
           {/* Plus — click to expand */}
-          <button
-            className="sb-strip-btn"
-            onClick={onToggle}
-            title="New chat"
-          >
+          <button className="sb-strip-btn" onClick={onToggle} title="New chat">
             <Plus size={17} />
           </button>
 
@@ -63,6 +73,22 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
           >
             <MessageSquare size={17} />
           </button>
+          {token ? (
+            <span
+              className="sb-footer-avatar"
+              style={{ marginTop: "auto", marginBottom: "0px" }}
+            >
+              {getInitials(user.name)}
+            </span>
+          ) : (
+            <span
+              className="sb-footer-avatar"
+              style={{ marginTop: "auto", marginBottom: "0px", cursor: "pointer" }}
+              onClick={() => setShowAuthModal(true)}
+            >
+              <User size={18} />
+            </span>
+          )}
         </div>
       )}
 
@@ -87,10 +113,14 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="sb-search-input"
-            title='Ctrl + K'
+            title="Ctrl + K"
           />
           {search && (
-            <X size={14} className="mob-sb-search-clear" onClick={() => setSearch('')} />
+            <X
+              size={14}
+              className="mob-sb-search-clear"
+              onClick={() => setSearch("")}
+            />
           )}
         </div>
       )}
@@ -98,60 +128,114 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
       {/* ── Chat list (expanded only) ── */}
       {sidebarOpen && (
         <nav className="sb-nav">
-          {
-            chats.length === 0 ? (
-              <div className="sb-no-chats">No chats found</div>
-            ) : (
-              chats.map(chat => (
-          <div
-            key={chat.id}
-            className={`chat-item ${chat.id === currentChatId ? "active" : ""}`}
-            onClick={() => {
-              setIsCreateNewChat(false);
-              setCurrentChatId(chat.id);
-            }}
-            title={chat.title}
-          >
-            <button
-              key={chat.id}
-              className={`sb-chat-item ${currentChatId === chat.id ? 'sb-chat-active' : ''}`}
-              // onClick={() => setActiveId(chat.id)}
-            >
-              <MessageSquare size={13} className="sb-chat-icon" />
-              <span className="sb-chat-title">{highlightText(chat.title, search)}</span>
-              <Trash2
-                size={14}
-                className="sb-delete-btn"
+          {chats.length === 0 ? (
+            <div className="sb-no-chats">No chats found</div>
+          ) : (
+            chats.map((chat) => (
+              <div
+                key={chat.id}
+                className={`chat-item ${chat.id === currentChatId ? "active" : ""}`}
                 onClick={() => {
-                  deleteChat(chat.id);
+                  setIsCreateNewChat(false);
+                  setCurrentChatId(chat.id);
                 }}
-              />
-            </button>
-          </div>
-        ))
-            )
-          }
+                title={chat.title}
+              >
+                <button
+                  key={chat.id}
+                  className={`sb-chat-item ${currentChatId === chat.id ? "sb-chat-active" : ""}`}
+                  // onClick={() => setActiveId(chat.id)}
+                  onClick={() => {
+                    setCurrentChatId(chat.id);
+                    setIsCreateNewChat(false);
+                  }}
+                >
+                  <MessageSquare size={13} className="sb-chat-icon" />
+                  {editingId === chat.id ? (
+                    <input
+                      className="sb-edit-input"
+                      value={editTitle}
+                      autoFocus
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSaveEdit(chat.id);
+                        if (e.key === "Escape") setEditingId(null);
+                      }}
+                      onBlur={() => handleSaveEdit(chat.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <span className="sb-chat-title">
+                      {highlightText(chat.title, search)}
+                    </span>
+                  )}
+                  {chat.messages.length > 0 && (
+                    <div className="sb-chat-actions">
+                      {token && (
+                        <Pencil
+                          size={14}
+                          className="sb-rename-btn"
+                          title="Rename"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingId(chat.id);
+                            setEditTitle(chat.title);
+                          }}
+                        />
+                      )}
+                      <Trash2
+                        size={14}
+                        className="sb-delete-btn"
+                        title="Delete"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteChat(chat.id);
+                        }}
+                      />
+                    </div>
+                  )}
+                </button>
+              </div>
+            ))
+          )}
         </nav>
       )}
 
       {/* ── Footer ── */}
-      {/* <div className={`sb-footer ${!sidebarOpen ? 'sb-footer-center' : ''}`}>
+      <div className={`sb-footer ${!sidebarOpen ? "sb-footer-center" : ""}`}>
         {sidebarOpen && (
-          <>
-            <button className="sb-footer-item">
+          <div style={{ color: "white" }}>
+            {token ? (
+              <div className="sb-footer-user">
+                <span className="sb-footer-avatar">
+                  {getInitials(user.name)}
+                </span>
+                <span className="sb-footer-username" title={user.name}>{user.name}</span>
+              </div>
+            ) : (
+              <div className="sb-login-cta">
+                <p>Save your chats & unlock more</p>
+                <button
+                  className="sb-footer-login-btn"
+                  onClick={() => setShowAuthModal(true)}
+                >
+                  Log in
+                </button>
+              </div>
+            )}
+            {/* <button className="sb-footer-item">
               <User size={15} />
               <span>John Doe</span>
-            </button>
-            <button className="sb-footer-item">
+            </button> */}
+            {/* <button className="sb-footer-item">
               <Settings size={15} />
               <span>Settings</span>
-            </button>
-          </>
+            </button> */}
+          </div>
         )}
-      </div> */}
-
+      </div>
     </div>
-  )
+  );
 }
 
 export default Sidebar;
