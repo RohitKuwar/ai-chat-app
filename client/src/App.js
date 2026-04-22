@@ -664,6 +664,7 @@ function App() {
               currentChatId={currentChatId}
               setCurrentChatId={setCurrentChatId}
               deleteChat={deleteChat}
+              renameChat={renameChat}
               setIsCreateNewChat={setIsCreateNewChat}
               highlightText={highlightText}
               setShowAuthModal={setShowAuthModal}

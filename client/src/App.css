@@ -1342,5 +1342,9 @@ body {
   .msg-actions {
     opacity: 1 !important;
   }
+
+  .sb-rename-btn {
+    opacity: 1;
+  }
 }
 

@@ -1,8 +1,21 @@
-import React from 'react';
-import { Plus, MessageSquare, Trash2, Search, X } from 'lucide-react'
+import React, { useState } from 'react';
+import { Plus, MessageSquare, Trash2, Search, X, Pencil } from 'lucide-react'
 import { getInitials } from './Utils/getInitials';
 
-function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, setSearch, createNewChat, chats, currentChatId, setCurrentChatId, deleteChat, setIsCreateNewChat, highlightText, setShowAuthModal, token, user }) {
+function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, setSearch, createNewChat, chats, currentChatId, renameChat, deleteChat, setCurrentChatId, setIsCreateNewChat, highlightText, setShowAuthModal, token, user }) {
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+
+  const handleSaveEdit = (chatId) => {
+    if (!editTitle.trim()) {
+      setEditingId(null);
+      return;
+    }
+
+    renameChat(chatId, editTitle.trim());
+    setEditingId(null);
+  };
+
   return (
     <div className={`mobile-sidebar ${mobSidebarOpen ? "visible" : "hidden"}`}>
         <div className="sb-new-chat-wrap">
@@ -53,15 +66,50 @@ function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, se
               // onClick={() => setActiveId(chat.id)}
             >
               <MessageSquare size={13} className="sb-chat-icon" />
-              <span className="sb-chat-title">{highlightText(chat.title, search)}</span>
-              <Trash2
-                size={14}
-                className="sb-delete-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteChat(chat.id);
-                }}
-              />
+              {editingId === chat.id ? (
+                    <input
+                      className="sb-edit-input"
+                      value={editTitle}
+                      autoFocus
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === "Enter") handleSaveEdit(chat.id);
+                        if (e.key === "Escape") setEditingId(null);
+                      }}
+                      // onBlur={() => handleSaveEdit(chat.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <span className="sb-chat-title">
+                      {highlightText(chat.title, search)}
+                    </span>
+                  )}
+                  {chat.messages.length > 0 && (
+                    <div className="sb-chat-actions">
+                      {token && (
+                        <Pencil
+                          size={14}
+                          className="sb-rename-btn"
+                          title="Rename"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingId(chat.id);
+                            setEditTitle(chat.title);
+                          }}
+                        />
+                      )}
+                      <Trash2
+                        size={14}
+                        className="sb-delete-btn"
+                        title="Delete"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteChat(chat.id);
+                        }}
+                      />
+                    </div>
+                  )}
             </button>
           </div>
         ))
