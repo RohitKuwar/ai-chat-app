@@ -56,7 +56,7 @@ function App() {
   const fullTextRef = useRef("");
 
   const SUMMARY_THRESHOLD = 20;
-  const FREE_CHAT_LIMIT = 2;
+  const FREE_CHAT_LIMIT = 10;
 
   const currentChat = chats.find((c) => c.id === currentChatId);
 
