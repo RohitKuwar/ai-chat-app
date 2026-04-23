@@ -1346,5 +1346,7 @@ body {
   .sb-rename-btn {
     opacity: 1;
   }
+
+  .sb-chat-actions { opacity: 1; }
 }
 
