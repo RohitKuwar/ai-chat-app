@@ -387,7 +387,7 @@ body {
   border-right: 1px solid whitesmoke;
   border-right: 1px solid rgb(146 135 135 / 40%);
   width: 80%;
-  height: 100vh;
+  height: 100dvh;
   position: absolute;
   top: 0;
   left: 0;
@@ -1178,6 +1178,7 @@ body {
   padding: 12px;
   color: white;
   margin-top: auto;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
 }
 
 /* ══════════════════════════════════════
@@ -1347,6 +1348,8 @@ body {
     opacity: 1;
   }
 
-  .sb-chat-actions { opacity: 1; }
+  .sb-chat-actions { 
+    opacity: 1; 
+  }
 }
 
