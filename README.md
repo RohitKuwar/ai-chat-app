@@ -82,6 +82,12 @@ npm start
 - Day 6: Implemented update chat API to append messages instead of creating new chats. Prevent duplicate chats by distinguishing between new and existing chat.
 - Day 7: Implemented delete and rename chat functionality with backend APIs. Added sidebar UX controls for managing chats effectively.
 
+---
+
+### 🔹 Week 6 — Retrieval Augmented Generation (RAG)
+- Day 1: Learned Retrieval Augmented Generation (RAG) and why LLMs need external data. Understood how search + context improves AI accuracy and reduces hallucination.
+- Day 2: Implemented file upload API with PDF/text parsing using multer and pdf-parse. Converted documents into raw text to prepare for RAG pipeline.
+
 ## 🚀 Current Capabilities
 
 - 💬 Chat with AI (context-aware)

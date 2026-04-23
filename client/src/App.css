@@ -574,7 +574,50 @@ body {
 /* 🧾 Input Wrapper */
 .input-wrapper {
   margin-top: 10px;
-  
+}
+
+/* ── Attached file chip ── */
+.attached-file-wrap {
+  width: 70%;
+  margin: 0 auto 8px;
+}
+
+.attached-file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 12px;
+  max-width: 100%;
+}
+
+.attached-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300px;
+}
+
+.attached-file-discard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #5e5e5e;
+  padding: 2px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: color 150ms;
+}
+
+.attached-file-discard:hover {
+  color: #f87171;
 }
 
 /* 🔥 Input Bar (MAIN UPGRADE) */
@@ -1181,6 +1224,23 @@ body {
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
 }
 
+.attach-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9b9b9b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: color 150ms, background 150ms;
+}
+
+.attach-btn:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
 /* ══════════════════════════════════════
    MOBILE — works on all iOS & Android
 ══════════════════════════════════════ */
@@ -1298,6 +1358,15 @@ body {
     box-sizing: border-box;
     margin: 0;
     width: 100%;           /* ← ensure wrapper never exceeds screen */
+  }
+
+  .attached-file-wrap {
+    width: 100%;
+    margin: 0 0 8px;
+  }
+
+  .attached-file-name {
+    max-width: 200px;
   }
 
   .input-bar {
