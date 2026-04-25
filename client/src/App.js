@@ -598,7 +598,6 @@ function App() {
 
     const data = await res.json();
     setAttachedFileText(data.text);
-    console.log(data.text);
   };
 
   const discardFile = () => {

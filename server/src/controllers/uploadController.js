@@ -1,4 +1,5 @@
 import { chunkText } from "../utils/chunkText.js";
+import { createEmbedding } from "../utils/createEmbedding.js";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 
 export const uploadFile = async (req, res) => {
@@ -41,9 +42,20 @@ export const uploadFile = async (req, res) => {
 
     const chunks = chunkText(extractedText);
 
+    const chunkEmbeddings = [];
+
+    for (const chunk of chunks) {
+      const embedding = await createEmbedding(chunk);
+
+      chunkEmbeddings.push({
+        text: chunk,
+        embedding,
+      });
+    }
+
     res.status(200).json({
       message: "File processed successfully",
-      text: chunks,
+      data: chunkEmbeddings,
     });
 
   } catch (error) {
