@@ -17,7 +17,8 @@ import {
   Copy,
   Download,
   Check,
-  CircleUserRound
+  CircleUserRound,
+  Paperclip
 } from "lucide-react";
 import AuthModal from "./AuthModal";
 
@@ -39,13 +40,14 @@ function App() {
   const [copiedChat, setCopiedChat] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [isAuthenticated, setIsAuthenticated] = useState(!!token);
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem("user");
     return stored ? JSON.parse(stored) : null;
   });
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [attachedFileText, setAttachedFileText] = useState('');
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -325,9 +327,11 @@ function App() {
     } catch (err) {
       console.error(err);
     }
-  };
+  };  
 
   const sendMessage = async () => {
+    setAttachedFile(null);
+    setAttachedFileText('');
     if (!message.trim() || loading || isStreaming) return;
 
     let chat = isCreateNewChat ? null : currentChat;
@@ -578,6 +582,30 @@ function App() {
     setLoading(false);
   };
 
+  const handleUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setAttachedFile(file.name);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("http://localhost:5000/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+    setAttachedFileText(data.text);
+    console.log(data.text);
+  };
+
+  const discardFile = () => {
+    setAttachedFile(null);
+    setAttachedFileText('');
+  };
+
   return (
     <div className="app">
       <div
@@ -814,6 +842,19 @@ function App() {
 
         {/* Input Area */}
         <div className="input-wrapper">
+
+           {attachedFile && (
+              <div className="attached-file-wrap">
+                <div className="attached-file-chip">
+                  <Paperclip size={12} />
+                  <span className="attached-file-name">{attachedFile}</span>
+                  <button className="attached-file-discard" onClick={discardFile} title="Remove file">
+                    <X size={12} />
+                  </button>
+                </div>
+              </div>
+            )}
+
           <div className="input-bar">
             {/* Mode Dropdown */}
             <div className="mode-dropdown" ref={dropdownRef}>
@@ -841,6 +882,13 @@ function App() {
               )}
             </div>
 
+            {/* <input type="file" onChange={handleUpload} /> */}
+
+            <input type="file" id="file-upload" style={{ display: 'none' }} onChange={handleUpload} />
+            <label htmlFor="file-upload" className="attach-btn" title="Attach file">
+              <Paperclip size={16} />
+            </label>
+
             {/* Input */}
             <input
               ref={inputRef}
@@ -864,6 +912,8 @@ function App() {
             >
               <Trash2 size={18} />
             </button> */}
+
+            {/* <Paperclip size={18} color="white" /> */}
 
             {/* Send & Abort Button */}
             {isStreaming ? (
