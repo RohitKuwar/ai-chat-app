@@ -1,4 +1,6 @@
 import openai from "../config/openai.js";
+import { createEmbedding } from "../utils/createEmbedding.js";
+import { cosineSimilarity } from "../utils/similarity.js";
 
 export const generateTitle = async (req, res) => {
   try {
@@ -47,6 +49,7 @@ export const summarize = async (req, res) => {
 export const chat = async (req, res) => {
   try {
     const { messages, mode } = req.body;
+    console.log('messages', messages);
 
     if (!messages || !messages.length) {
       return res.status(400).json({ error: "Messages required" });
@@ -58,8 +61,53 @@ export const chat = async (req, res) => {
     res.setHeader("Connection", "keep-alive"); // keeps stream alive
     res.setHeader("Content-Encoding", "identity"); // disables compression to allow real-time streaming
 
+    const userQuestion = messages[messages.length - 1].content;
+    console.log("User Question:", userQuestion);
+    
+    const chunkEmbeddings = global.chunkEmbeddings || [];
+
+    let context = "";
+    let hasContext = false;
+
+    if(chunkEmbeddings.length > 0) {
+      const queryEmbedding = await createEmbedding(userQuestion);
+      const scoredChunks = chunkEmbeddings.map(chunk => ({
+        text: chunk.text,
+        score: cosineSimilarity(queryEmbedding, chunk.embedding),
+      }));
+
+      const topChunks = scoredChunks
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 2);
+      console.log("Top Chunks:", topChunks);
+
+      context = topChunks.map((c) => c.text).join("\n\n");
+      console.log("Context:", context);
+
+      hasContext = topChunks.length > 0;
+    }
+
     /* 🧠 SYSTEM PROMPT BASED ON MODE */
-    let systemPrompt = "You are a helpful AI assistant. Always respond in clean markdown format with proper spacing.";
+    let systemPrompt;
+
+    if (hasContext) {
+      // RAG MODE (document-based)
+      systemPrompt = `
+    You are a helpful AI assistant.
+
+    You are given some context from a document.
+
+    Rules:
+    - If the question is related to the context, answer using it.
+    - If the question is NOT related to the context, answer normally using your knowledge.
+    - Do NOT force context if it's irrelevant.
+    - Be accurate and clear.
+    `;
+    } else {
+      // NORMAL CHAT MODE
+      systemPrompt =
+        "You are a helpful AI assistant. Always respond in clean markdown format with proper spacing.";
+    }
 
     if (mode === "code") {
       systemPrompt =
@@ -71,13 +119,15 @@ export const chat = async (req, res) => {
         "Write a detailed blog with headings, examples, and a catchy title in markdown.";
     }
 
+    const finalSystemPrompt = hasContext ? systemPrompt + "\n\nContext:\n" + context : systemPrompt;
+
     /* 🔥 SINGLE STREAM CALL (OPTIMIZED) */
     const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: systemPrompt,
+          content: finalSystemPrompt,
         },
         ...messages,
       ],

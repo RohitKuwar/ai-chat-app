@@ -53,6 +53,10 @@ export const uploadFile = async (req, res) => {
       });
     }
 
+    global.chunkEmbeddings = chunkEmbeddings;
+
+    console.log("Embeddings stored:", chunkEmbeddings.length);
+
     res.status(200).json({
       message: "File processed successfully",
       data: chunkEmbeddings,

@@ -46,6 +46,7 @@ function App() {
     const stored = localStorage.getItem("user");
     return stored ? JSON.parse(stored) : null;
   });
+  const [isUploading, setIsUploading] = useState(false);
   const [attachedFile, setAttachedFile] = useState(null);
   const [attachedFileText, setAttachedFileText] = useState('');
 
@@ -56,9 +57,10 @@ function App() {
   const chatEndRef = useRef(null);
   const controllerRef = useRef(null);
   const fullTextRef = useRef("");
+  const uploadControllerRef = useRef(null);
 
   const SUMMARY_THRESHOLD = 20;
-  const FREE_CHAT_LIMIT = 10;
+  const FREE_CHAT_LIMIT = 100;
 
   const currentChat = chats.find((c) => c.id === currentChatId);
 
@@ -412,7 +414,7 @@ function App() {
 
       /* 🔥 STEP 2: Chat API */
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/ai/chat`,
+        `http://localhost:5000/api/ai/chat`,
         {
           method: "POST",
           headers: {
@@ -586,23 +588,47 @@ function App() {
     const file = e.target.files[0];
     if (!file) return;
 
+    setIsUploading(true);
     setAttachedFile(file.name);
+
+    const controller = new AbortController();
+    uploadControllerRef.current = controller;
 
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch("http://localhost:5000/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      const res = await fetch("http://localhost:5000/api/upload", {
+        method: "POST",
+        body: formData,
+        signal: controller.signal
+      });
 
-    const data = await res.json();
-    setAttachedFileText(data.text);
+      const data = await res.json();
+      setAttachedFileText(data.text);
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log('Upload cancelled');
+      } else {
+        console.error("Upload failed:", err);
+      }
+      setAttachedFile(null);
+      setAttachedFileText('');
+    } finally {
+      setIsUploading(false);
+      uploadControllerRef.current = null;
+      e.target.value = '';
+    }
   };
 
   const discardFile = () => {
+    // Cancel upload if still in progress
+    if (uploadControllerRef.current) {
+      uploadControllerRef.current.abort();
+    }
     setAttachedFile(null);
     setAttachedFileText('');
+    setIsUploading(false);
   };
 
   return (
@@ -842,17 +868,23 @@ function App() {
         {/* Input Area */}
         <div className="input-wrapper">
 
-           {attachedFile && (
-              <div className="attached-file-wrap">
-                <div className="attached-file-chip">
+          {attachedFile && (
+            <div className="attached-file-wrap">
+              <div className={`attached-file-chip ${isUploading ? 'uploading' : ''}`}>
+                {isUploading ? (
+                  <span className="attach-spinner" />
+                ) : (
                   <Paperclip size={12} />
-                  <span className="attached-file-name">{attachedFile}</span>
-                  <button className="attached-file-discard" onClick={discardFile} title="Remove file">
+                )}
+                <span className="attached-file-name">
+                  {isUploading ? `Uploading ${attachedFile}...` : attachedFile}
+                </span>
+                <button className="attached-file-discard" onClick={discardFile} title={isUploading ? 'Cancel upload' : 'Remove file'}>
                     <X size={12} />
                   </button>
-                </div>
               </div>
-            )}
+            </div>
+          )}
 
           <div className="input-bar">
             {/* Mode Dropdown */}
@@ -884,7 +916,7 @@ function App() {
             {/* <input type="file" onChange={handleUpload} /> */}
 
             <input type="file" id="file-upload" style={{ display: 'none' }} onChange={handleUpload} />
-            <label htmlFor="file-upload" className="attach-btn" title="Attach file">
+            <label htmlFor="file-upload" className={`attach-btn ${isUploading ? 'attach-btn-disabled' : ''}`} title="Attach file">
               <Paperclip size={16} />
             </label>
 
@@ -926,7 +958,7 @@ function App() {
             ) : (
               <button
                 onClick={sendMessage}
-                disabled={loading}
+                disabled={loading || isUploading}
                 className="send-btn"
                 title="send message"
               >

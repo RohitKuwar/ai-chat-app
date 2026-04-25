@@ -620,6 +620,35 @@ body {
   color: #f87171;
 }
 
+/* ── Uploading state ── */
+.attached-file-chip.uploading {
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.08);
+  color: #818cf8;
+}
+
+/* Spinner */
+.attach-spinner {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid rgba(129, 140, 248, 0.3);
+  border-top-color: #818cf8;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: spin 600ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Disabled attach button */
+.attach-btn-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
 /* 🔥 Input Bar (MAIN UPGRADE) */
 .input-bar {
   display: flex;
