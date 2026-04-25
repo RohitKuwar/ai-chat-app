@@ -87,8 +87,9 @@ npm start
 ### 🔹 Week 6 — Retrieval Augmented Generation (RAG)
 - Day 1: Learned Retrieval Augmented Generation (RAG) and why LLMs need external data. Understood how search + context improves AI accuracy and reduces hallucination.
 - Day 2: Implemented file upload API with PDF/text parsing using multer and pdf-parse. Converted documents into raw text to prepare for RAG pipeline.
-- Day 2: Implemented text chunking with overlap to split large documents into smaller parts.
-- Day 2: Generated embeddings for text chunks using OpenAI embedding model.
+- Day 3: Implemented text chunking with overlap to split large documents into smaller parts.
+- Day 4: Generated embeddings for text chunks using OpenAI embedding model.
+- Day 5: Implemented cosine similarity to compare embeddings and find relevant chunks.
 
 
 ## 🚀 Current Capabilities
