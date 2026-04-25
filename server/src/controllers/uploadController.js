@@ -1,3 +1,4 @@
+import { chunkText } from "../utils/chunkText.js";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 
 export const uploadFile = async (req, res) => {
@@ -38,9 +39,11 @@ export const uploadFile = async (req, res) => {
       extractedText = file.buffer.toString();
     }
 
+    const chunks = chunkText(extractedText);
+
     res.status(200).json({
       message: "File processed successfully",
-      text: extractedText,
+      text: chunks,
     });
 
   } catch (error) {
