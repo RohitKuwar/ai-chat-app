@@ -60,7 +60,7 @@ function App() {
   const uploadControllerRef = useRef(null);
 
   const SUMMARY_THRESHOLD = 20;
-  const FREE_CHAT_LIMIT = 100;
+  const FREE_CHAT_LIMIT = 10;
 
   const currentChat = chats.find((c) => c.id === currentChatId);
 
