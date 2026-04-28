@@ -350,20 +350,41 @@ function App() {
 
     // AUTO CREATE CHAT IF NONE EXISTS
     if (!chat) {
+      let newId = "chat_" + Date.now();
+
+      // 🔥 If logged in → create DB chat immediately
+      if (token) {
+        const res = await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/chat/save`,
+          {
+            title: "New Chat",
+            messages: [],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        newId = res.data.chat._id;
+      }
+
       const newChat = {
-        id: "chat_" + Date.now(),
-        title: message.slice(0, 30),
-        messages: []
+        id: newId,
+        title: "New Chat",
+        messages: [],
       };
 
-      setChats(prev => [newChat, ...prev]);
-      setCurrentChatId(newChat.id);
+      setChats((prev) => [newChat, ...prev]);
+      setCurrentChatId(newId);
       setIsCreateNewChat(false);
 
       chat = newChat;
-      chatId = newChat.id;
+      chatId = newId;
 
-      generateTitle(message, newChat.id);
+      // ✅ Always generate title
+      // generateTitle(message, newId);
     } else {
       chatId = chat.id;
     }
@@ -424,6 +445,7 @@ function App() {
           body: JSON.stringify({
             messages: updatedMessages,
             mode,
+            chatId: chatId
           }),
         },
       );
@@ -479,6 +501,17 @@ function App() {
 
       const finalMessages = [...updatedMessages, assistantMessage];
 
+      setChats(prev =>
+        prev.map(c =>
+          c.id === chatId ? { ...c, title: "Generating..." } : c
+        )
+      );
+
+      // Generate title for first user message
+      if (token && finalMessages.length === 2) {
+        generateTitle(userMessage.content, chatId);
+      }
+
       if (token) {
         if (chatId.startsWith("chat_")) {
           // 🔥 CREATE
@@ -506,17 +539,21 @@ function App() {
 
         } else {
           // 🔥 UPDATE
-          await axios.put(`${process.env.REACT_APP_API_URL}/api/chat/update`, {
-            chatId,
-            title,
-            messages: finalMessages,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+          if (token) {
+            await axios.put(
+              `${process.env.REACT_APP_API_URL}/api/chat/update`,
+              {
+                chatId,
+                title,
+                messages: finalMessages,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
           }
-        );
       }
 }
     } catch (err) {
@@ -588,36 +625,64 @@ function App() {
     const file = e.target.files[0];
     if (!file) return;
 
+    if (!token) {
+      setShowAuthModal(true);
+      return;
+    }
+
     setIsUploading(true);
     setAttachedFile(file.name);
 
-    const controller = new AbortController();
-    uploadControllerRef.current = controller;
-
-    const formData = new FormData();
-    formData.append("file", file);
+    let chatIdToUse = currentChatId;
 
     try {
+      // 🔥 STEP 1: Ensure chat exists BEFORE upload
+      if (!chatIdToUse) {
+        const res = await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/chat/save`,
+          {
+            title: "New Chat",
+            messages: [],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        chatIdToUse = res.data.chat._id;
+
+        const newChat = {
+          id: chatIdToUse,
+          title: "New Chat",
+          messages: [],
+        };
+
+        setChats(prev => [newChat, ...prev]);
+        setCurrentChatId(chatIdToUse);
+        setIsCreateNewChat(false);
+      }
+
+      // 🔥 STEP 2: Upload with VALID chatId
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("chatId", chatIdToUse);
+
       const res = await fetch("http://localhost:5000/api/upload", {
         method: "POST",
         body: formData,
-        signal: controller.signal
       });
 
       const data = await res.json();
-      setAttachedFileText(data.text);
+
+      console.log("Upload success:", data);
+
     } catch (err) {
-      if (err.name === 'AbortError') {
-        console.log('Upload cancelled');
-      } else {
-        console.error("Upload failed:", err);
-      }
+      console.error("Upload failed:", err);
       setAttachedFile(null);
-      setAttachedFileText('');
     } finally {
       setIsUploading(false);
-      uploadControllerRef.current = null;
-      e.target.value = '';
     }
   };
 
@@ -867,10 +932,11 @@ function App() {
 
         {/* Input Area */}
         <div className="input-wrapper">
-
           {attachedFile && (
             <div className="attached-file-wrap">
-              <div className={`attached-file-chip ${isUploading ? 'uploading' : ''}`}>
+              <div
+                className={`attached-file-chip ${isUploading ? "uploading" : ""}`}
+              >
                 {isUploading ? (
                   <span className="attach-spinner" />
                 ) : (
@@ -879,9 +945,13 @@ function App() {
                 <span className="attached-file-name">
                   {isUploading ? `Uploading ${attachedFile}...` : attachedFile}
                 </span>
-                <button className="attached-file-discard" onClick={discardFile} title={isUploading ? 'Cancel upload' : 'Remove file'}>
-                    <X size={12} />
-                  </button>
+                <button
+                  className="attached-file-discard"
+                  onClick={discardFile}
+                  title={isUploading ? "Cancel upload" : "Remove file"}
+                >
+                  <X size={12} />
+                </button>
               </div>
             </div>
           )}
@@ -915,8 +985,23 @@ function App() {
 
             {/* <input type="file" onChange={handleUpload} /> */}
 
-            <input type="file" id="file-upload" style={{ display: 'none' }} onChange={handleUpload} />
-            <label htmlFor="file-upload" className={`attach-btn ${isUploading ? 'attach-btn-disabled' : ''}`} title="Attach file">
+            <input
+              type="file"
+              id="file-upload"
+              style={{ display: "none" }}
+              onChange={handleUpload}
+            />
+            <label
+              htmlFor="file-upload"
+              className={`attach-btn ${isUploading ? "attach-btn-disabled" : ""}`}
+              title="Attach file"
+              onClick={(e) => {
+                if (!token) {
+                  e.preventDefault();
+                  setShowAuthModal(true);
+                }
+              }}
+            >
               <Paperclip size={16} />
             </label>
 
