@@ -1,4 +1,5 @@
 import openai from "../config/openai.js";
+import Chat from "../models/Chat.js";
 import { createEmbedding } from "../utils/createEmbedding.js";
 import { cosineSimilarity } from "../utils/similarity.js";
 
@@ -48,7 +49,7 @@ export const summarize = async (req, res) => {
 
 export const chat = async (req, res) => {
   try {
-    const { messages, mode } = req.body;
+    const { messages, mode, chatId } = req.body;
     console.log('messages', messages);
 
     if (!messages || !messages.length) {
@@ -63,8 +64,13 @@ export const chat = async (req, res) => {
 
     const userQuestion = messages[messages.length - 1].content;
     console.log("User Question:", userQuestion);
-    
-    const chunkEmbeddings = global.chunkEmbeddings || [];
+
+    let chunkEmbeddings = [];
+
+    if (chatId && !chatId.startsWith("chat_")) {
+      const chatDoc = await Chat.findById(chatId);
+      chunkEmbeddings = chatDoc?.embeddings || [];
+    }
 
     let context = "";
     let hasContext = false;

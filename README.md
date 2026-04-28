@@ -90,6 +90,7 @@ npm start
 - Day 3: Implemented text chunking with overlap to split large documents into smaller parts.
 - Day 4: Generated embeddings for text chunks using OpenAI embedding model.
 - Day 5: Implemented cosine similarity to compare embeddings and find relevant chunks.
+- Day 6: Replaced global embedding storage with per-chat embeddings in database. Linked uploaded document embeddings to specific chat using chatId.
 
 
 ## 🚀 Current Capabilities
