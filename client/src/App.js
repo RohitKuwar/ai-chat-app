@@ -49,6 +49,8 @@ function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [attachedFile, setAttachedFile] = useState(null);
   const [attachedFileText, setAttachedFileText] = useState('');
+  const [chatsLoading, setChatsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null)
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -263,6 +265,7 @@ function App() {
 
 
   const fetchChats = async () => {
+    setChatsLoading(true);
     const currentToken = localStorage.getItem("token");
 
     try {
@@ -282,6 +285,8 @@ function App() {
       setCurrentChatId(formattedChats[0]?.id);
     } catch (err) {
       console.error(err);
+    } finally {
+      setChatsLoading(false);
     }
   };
 
@@ -501,11 +506,11 @@ function App() {
 
       const finalMessages = [...updatedMessages, assistantMessage];
 
-      setChats(prev =>
-        prev.map(c =>
-          c.id === chatId ? { ...c, title: "Generating..." } : c
-        )
-      );
+      // setChats(prev =>
+      //   prev.map(c =>
+      //     c.id === chatId ? { ...c, title: "Generating..." } : c
+      //   )
+      // );
 
       // Generate title for first user message
       if (token && finalMessages.length === 2) {
@@ -572,7 +577,7 @@ function App() {
     }
 
     if (!token) return;
-
+    setDeletingId(chatId);
     await axios.delete(
       `${process.env.REACT_APP_API_URL}/api/chat/${chatId}`,
       {
@@ -581,6 +586,7 @@ function App() {
         },
       }
     );
+    setDeletingId(null);
 
     setChats(prev => prev.filter(c => c.id !== chatId));
 
@@ -717,6 +723,8 @@ function App() {
           setShowAuthModal={setShowAuthModal}
           token={token}
           user={user}
+          chatsLoading={chatsLoading}
+          deletingId={deletingId}
         />
       </div>
       <div
@@ -788,6 +796,8 @@ function App() {
               setShowAuthModal={setShowAuthModal}
               token={token}
               user={user}
+              chatsLoading={chatsLoading}
+              deletingId={deletingId}
             />
           </div>
         )}

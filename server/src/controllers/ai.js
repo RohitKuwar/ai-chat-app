@@ -50,7 +50,6 @@ export const summarize = async (req, res) => {
 export const chat = async (req, res) => {
   try {
     const { messages, mode, chatId } = req.body;
-    console.log('messages', messages);
 
     if (!messages || !messages.length) {
       return res.status(400).json({ error: "Messages required" });
@@ -84,7 +83,7 @@ export const chat = async (req, res) => {
 
       const topChunks = scoredChunks
         .sort((a, b) => b.score - a.score)
-        .slice(0, 2);
+        .slice(0, 3); 
       console.log("Top Chunks:", topChunks);
 
       context = topChunks.map((c) => c.text).join("\n\n");
@@ -105,6 +104,9 @@ export const chat = async (req, res) => {
 
     Rules:
     - If the question is related to the context, answer using it.
+    - Read ALL context carefully.
+    - Do NOT rely only on first chunk.
+    - Find the most relevant information across all chunks.
     - If the question is NOT related to the context, answer normally using your knowledge.
     - Do NOT force context if it's irrelevant.
     - Be accurate and clear.

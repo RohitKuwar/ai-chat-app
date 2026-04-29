@@ -46,7 +46,9 @@ export const uploadFile = async (req, res) => {
       extractedText = file.buffer.toString();
     }
 
-    const chunks = chunkText(extractedText);
+    const cleanText = extractedText.toLowerCase().replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+
+    const chunks = chunkText(cleanText);
 
     const chunkEmbeddings = await Promise.all(
       chunks.map(async (chunk) => {

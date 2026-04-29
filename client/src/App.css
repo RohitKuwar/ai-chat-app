@@ -1270,6 +1270,31 @@ body {
   background: rgba(255, 255, 255, 0.06);
 }
 
+.sb-loader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px;
+  color: #5e5e5e;
+  font-size: 12px;
+}
+
+.sb-loader-icon {
+  animation: spin 700ms linear infinite;
+  flex-shrink: 0;
+}
+
+.sb-chat-deleting {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.sb-deleting-icon {
+  color: #f87171;
+  flex-shrink: 0;
+  animation: spin 700ms linear infinite;
+}
+
 /* ══════════════════════════════════════
    MOBILE — works on all iOS & Android
 ══════════════════════════════════════ */

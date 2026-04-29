@@ -91,6 +91,7 @@ npm start
 - Day 4: Generated embeddings for text chunks using OpenAI embedding model.
 - Day 5: Implemented cosine similarity to compare embeddings and find relevant chunks.
 - Day 6: Replaced global embedding storage with per-chat embeddings in database. Linked uploaded document embeddings to specific chat using chatId.
+- Day 7: Optimized retrieval logic with clean text and overalap approach and added loading state in UI for chat load and chat delete.
 
 
 ## 🚀 Current Capabilities
