@@ -1,4 +1,4 @@
-export const chunkText = (text, chunkSize = 500, overlap = 100) => {
+export const chunkText = (text, chunkSize = 400, overlap = 150) => {
   const chunks = [];
 
   let start = 0;

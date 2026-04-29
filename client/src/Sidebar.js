@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { PanelLeft, Plus, MessageSquare, Trash2, Search, X, Pencil, User } from 'lucide-react'
+import { PanelLeft, Plus, MessageSquare, Trash2, Search, X, Pencil, User, Loader2 } from 'lucide-react'
 import { getInitials } from './Utils/getInitials';
 
-function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chats, currentChatId, setCurrentChatId, deleteChat, renameChat, setIsCreateNewChat, highlightText, setShowAuthModal, token, user }) {
+function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chats, currentChatId, setCurrentChatId, deleteChat, renameChat, setIsCreateNewChat, highlightText, setShowAuthModal, token, user, chatsLoading, deletingId }) {
 
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
@@ -128,7 +128,13 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
       {/* ── Chat list (expanded only) ── */}
       {sidebarOpen && (
         <nav className="sb-nav">
-          {chats.length === 0 ? (
+          {chatsLoading ? (
+            <div className="sb-loader">
+              <Loader2 size={16} className="sb-loader-icon" />
+              <span>Loading chats...</span>
+            </div>
+          ) :
+          chats.length === 0 ? (
             <div className="sb-no-chats">No chats found</div>
           ) : (
             chats.map((chat) => (
@@ -183,15 +189,21 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
                           }}
                         />
                       )}
-                      <Trash2
-                        size={14}
-                        className="sb-delete-btn"
-                        title="Delete"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteChat(chat.id);
-                        }}
-                      />
+                      {
+                        deletingId === chat.id ? (
+                          <Loader2 size={13} className="sb-deleting-icon" />
+                        ) : (
+                          <Trash2
+                            size={14}
+                            className="sb-delete-btn"
+                            title="Delete"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteChat(chat.id);
+                            }}
+                          />
+                        )
+                      }
                     </div>
                   )}
                 </button>
