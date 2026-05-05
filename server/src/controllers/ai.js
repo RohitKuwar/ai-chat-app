@@ -75,19 +75,35 @@ export const chat = async (req, res) => {
     let hasContext = false;
 
     if(chunkEmbeddings.length > 0) {
-      const queryEmbedding = await createEmbedding(userQuestion);
+      const cleanQuery = userQuestion
+      .toLowerCase()
+      .replace(/\n/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+      const queryEmbedding = await createEmbedding(cleanQuery);
       const scoredChunks = chunkEmbeddings.map(chunk => ({
         text: chunk.text,
         score: cosineSimilarity(queryEmbedding, chunk.embedding),
       }));
 
-      const topChunks = scoredChunks
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3); 
-      console.log("Top Chunks:", topChunks);
+      const sortedChunks = scoredChunks.sort((a, b) => b.score - a.score);
+
+      const maxScore = sortedChunks[0]?.score || 0;
+
+      let topChunks = [];
+
+      if (maxScore >= 0.35) {
+        topChunks = sortedChunks
+          .filter(c => c.score > maxScore * 0.8)
+          .slice(0, 3);
+      }
 
       context = topChunks.map((c) => c.text).join("\n\n");
       console.log("Context:", context);
+
+      console.log("Max Score:", maxScore);
+      console.log("Top Chunks:", topChunks);
 
       hasContext = topChunks.length > 0;
     }
