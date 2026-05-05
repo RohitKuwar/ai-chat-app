@@ -99,6 +99,7 @@ npm start
 - Day 1: Implemented confidence-based filtering using similarity scores and removed low-relevance chunks to reduce noisy context and improve answer precision.
 - Day 2: Improved context ranking by structuring retrieved chunks based on relevance and updating system prompt to prioritize higher-ranked chunks. Ensured AI focuses on the most relevant information first, reducing incorrect answers caused by poor context utilization.
 - Day 3: Implemented hybrid search by combining semantic similarity with keyword-based scoring. Added keyword extraction from user queries and boosted chunk relevance using keyword matching, improving retrieval accuracy for structured data like emails, phone numbers, and IDs.
+- Day 4: Implemented conversation memory by passing recent chat messages along with the current query. Enabled AI to understand follow-up questions and maintain conversational context, improving user experience and making interactions more natural.
 
 
 ## 🚀 Current Capabilities

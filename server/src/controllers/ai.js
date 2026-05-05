@@ -56,6 +56,8 @@ export const chat = async (req, res) => {
       return res.status(400).json({ error: "Messages required" });
     }
 
+    const recentMessages = messages.slice(-4);
+
     res.setHeader("Content-Type", "text/plain; charset=utf-8"); // tells browser how to read data
     res.setHeader("Transfer-Encoding", "chunked"); // enables chunk streaming
     res.setHeader("Cache-Control", "no-cache"); // prevents caching of streamed data
@@ -157,7 +159,7 @@ export const chat = async (req, res) => {
           role: "system",
           content: finalSystemPrompt,
         },
-        ...messages,
+        ...recentMessages,
       ],
       stream: true,
     });
