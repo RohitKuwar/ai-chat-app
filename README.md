@@ -93,6 +93,11 @@ npm start
 - Day 6: Replaced global embedding storage with per-chat embeddings in database. Linked uploaded document embeddings to specific chat using chatId.
 - Day 7: Optimized retrieval logic with clean text and overalap approach and added loading state in UI for chat load and chat delete.
 
+---
+
+### 🔹 Week 7 — Advanced RAG & Improvements
+- Day 1: Implemented confidence-based filtering using similarity scores and removed low-relevance chunks to reduce noisy context and improve answer precision.
+
 
 ## 🚀 Current Capabilities
 

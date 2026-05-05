@@ -45,10 +45,10 @@ function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, se
 
         <nav className="sb-nav">
           {chatsLoading ? (
-            <div className="sb-loader">
+            token && (<div className="sb-loader">
               <Loader2 size={16} className="sb-loader-icon" />
               <span>Loading chats...</span>
-            </div>
+            </div>)
           ) :
             chats.length === 0 ? (
               <div className="sb-no-chats">No chats found</div>
