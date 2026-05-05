@@ -2,6 +2,7 @@ import openai from "../config/openai.js";
 import Chat from "../models/Chat.js";
 import { createEmbedding } from "../utils/createEmbedding.js";
 import { cosineSimilarity } from "../utils/similarity.js";
+import { getKeywordScore } from "../utils/getKeywordScore.js";
 
 export const generateTitle = async (req, res) => {
   try {
@@ -75,17 +76,20 @@ export const chat = async (req, res) => {
     let hasContext = false;
 
     if(chunkEmbeddings.length > 0) {
-      const cleanQuery = userQuestion
-      .toLowerCase()
-      .replace(/\n/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
+      const keywords = userQuestion.toLowerCase().split(" ").filter(word => word.length > 3);
+
+      const cleanQuery = userQuestion.toLowerCase().replace(/\n/g, " ").replace(/\s+/g, " ").trim();
 
       const queryEmbedding = await createEmbedding(cleanQuery);
-      const scoredChunks = chunkEmbeddings.map(chunk => ({
-        text: chunk.text,
-        score: cosineSimilarity(queryEmbedding, chunk.embedding),
-      }));
+      const scoredChunks = chunkEmbeddings.map(chunk => {
+        const semanticScore = cosineSimilarity(queryEmbedding, chunk.embedding);
+        const keywordScore = getKeywordScore(chunk.text, keywords);
+
+        return {
+          text: chunk.text,
+          score: semanticScore + keywordScore,
+        };
+      });
 
       const sortedChunks = scoredChunks.sort((a, b) => b.score - a.score);
 
