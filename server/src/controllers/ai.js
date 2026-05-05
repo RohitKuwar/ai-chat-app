@@ -3,6 +3,7 @@ import Chat from "../models/Chat.js";
 import { createEmbedding } from "../utils/createEmbedding.js";
 import { cosineSimilarity } from "../utils/similarity.js";
 import { getKeywordScore } from "../utils/getKeywordScore.js";
+import { getCachedEmbedding } from "../utils/cache.js";
 
 export const generateTitle = async (req, res) => {
   try {
@@ -82,7 +83,10 @@ export const chat = async (req, res) => {
 
       const cleanQuery = userQuestion.toLowerCase().replace(/\n/g, " ").replace(/\s+/g, " ").trim();
 
-      const queryEmbedding = await createEmbedding(cleanQuery);
+      const queryEmbedding = await getCachedEmbedding(cleanQuery, createEmbedding);
+      
+      const limitedChunks = chunkEmbeddings.slice(0, 50);
+
       const scoredChunks = chunkEmbeddings.map(chunk => {
         const semanticScore = cosineSimilarity(queryEmbedding, chunk.embedding);
         const keywordScore = getKeywordScore(chunk.text, keywords);
