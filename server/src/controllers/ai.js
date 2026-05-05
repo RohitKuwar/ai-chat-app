@@ -99,9 +99,8 @@ export const chat = async (req, res) => {
           .slice(0, 3);
       }
 
-      context = topChunks.map((c) => c.text).join("\n\n");
+      context = topChunks.map((c, index) => `Chunk ${index + 1} (Relevance Score: ${c.score.toFixed(2)}):\n${c.text}`).join("\n\n");
       console.log("Context:", context);
-
       console.log("Max Score:", maxScore);
       console.log("Top Chunks:", topChunks);
 
@@ -114,19 +113,20 @@ export const chat = async (req, res) => {
     if (hasContext) {
       // RAG MODE (document-based)
       systemPrompt = `
-    You are a helpful AI assistant.
+        You are a helpful AI assistant.
 
-    You are given some context from a document.
+        You are given multiple context chunks ranked by relevance.
 
-    Rules:
-    - If the question is related to the context, answer using it.
-    - Read ALL context carefully.
-    - Do NOT rely only on first chunk.
-    - Find the most relevant information across all chunks.
-    - If the question is NOT related to the context, answer normally using your knowledge.
-    - Do NOT force context if it's irrelevant.
-    - Be accurate and clear.
-    `;
+        Rules:
+        - Chunk 1 is the most relevant. Prioritize it.
+        - Use other chunks only if needed.
+        - Do NOT mix unrelated information from different chunks.
+        - If the answer is clearly present in one chunk, use that chunk only.
+        - If the question is related to the context, answer using it.
+        - If the question is NOT related to the context, answer normally using your knowledge.
+        - Do NOT force context if it's irrelevant.
+        - Be accurate and clear.
+        `;
     } else {
       // NORMAL CHAT MODE
       systemPrompt =

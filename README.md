@@ -97,6 +97,7 @@ npm start
 
 ### 🔹 Week 7 — Advanced RAG & Improvements
 - Day 1: Implemented confidence-based filtering using similarity scores and removed low-relevance chunks to reduce noisy context and improve answer precision.
+- Day 2: Improved context ranking by structuring retrieved chunks based on relevance and updating system prompt to prioritize higher-ranked chunks. Ensured AI focuses on the most relevant information first, reducing incorrect answers caused by poor context utilization.
 
 
 ## 🚀 Current Capabilities
