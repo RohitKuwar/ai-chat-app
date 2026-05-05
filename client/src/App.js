@@ -48,6 +48,7 @@ function App() {
   });
   const [isUploading, setIsUploading] = useState(false);
   const [attachedFile, setAttachedFile] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [attachedFileText, setAttachedFileText] = useState('');
   const [chatsLoading, setChatsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null)
@@ -440,7 +441,7 @@ function App() {
 
       /* 🔥 STEP 2: Chat API */
       const response = await fetch(
-        `http://localhost:5000/api/ai/chat`,
+        `${process.env.REACT_APP_API_URL}/api/ai/chat`,
         {
           method: "POST",
           headers: {
@@ -675,7 +676,7 @@ function App() {
       formData.append("file", file);
       formData.append("chatId", chatIdToUse);
 
-      const res = await fetch("http://localhost:5000/api/upload", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/upload`, {
         method: "POST",
         body: formData,
       });
