@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Plus, MessageSquare, Trash2, Search, X, Pencil, Loader2 } from 'lucide-react'
 import { getInitials } from './Utils/getInitials';
 
-function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, setSearch, createNewChat, chats, currentChatId, renameChat, deleteChat, setCurrentChatId, setIsCreateNewChat, highlightText, setShowAuthModal, token, user, chatsLoading, deletingId }) {
+function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, setSearch, createNewChat, chats, currentChatId, renameChat, deleteChat, setCurrentChatId, setIsCreateNewChat, highlightText, setShowAuthModal, token, user, chatsLoading, deletingId, setAttachedFile, setAttachedFileText, setIsUploading }) {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
 
@@ -62,6 +62,9 @@ function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, se
               setCurrentChatId(chat.id);
               setMobSidebarOpen(false);
               setSearch("");
+              setAttachedFile(null);
+              setAttachedFileText("");
+              setIsUploading(false);
             }}
             title={chat.title}
           >
