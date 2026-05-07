@@ -892,7 +892,13 @@ function App() {
                 </>
               ) : (
                 <>
-                  <button onClick={() => document.getElementById("file-upload").click()}>
+                  <button onClick={() => {
+                    if(token) {
+                      document.getElementById("file-upload").click()
+                    } else {
+                      setShowAuthModal(true);
+                    }
+                  }}>
                     Upload Document
                   </button>
 
