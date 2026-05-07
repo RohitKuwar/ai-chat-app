@@ -50,17 +50,22 @@ function App() {
   const [attachedFile, setAttachedFile] = useState(null);
   // eslint-disable-next-line no-unused-vars
   const [attachedFileText, setAttachedFileText] = useState('');
+  const [attachedFileUrl, setAttachedFileUrl] = useState("");
+  const [attachedFileType, setAttachedFileType] = useState("");
   const [chatsLoading, setChatsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null)
-
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [previewFile, setPreviewFile] = useState(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  
   const dropdownRef = useRef(null);
   const inputRef = useRef();
   const chatEndRef = useRef(null);
   const controllerRef = useRef(null);
   const fullTextRef = useRef("");
   const uploadControllerRef = useRef(null);
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const SUMMARY_THRESHOLD = 20;
   const FREE_CHAT_LIMIT = 10;
@@ -298,6 +303,7 @@ function App() {
     setIsAuthenticated(false); 
     setChats([]); 
     setCurrentChatId(null);
+    setAttachedFile(null);
   };
 
   const createNewChat = () => {
@@ -311,6 +317,9 @@ function App() {
     // setIsCreateNewChat(true);
     setCurrentChatId(null);
     setIsCreateNewChat(true);
+    setIsFirstLoad(false);
+    setAttachedFile(null);
+    setAttachedFileText("");
   };
 
   const generateTitle = async (msg, chatId) => {
@@ -399,12 +408,20 @@ function App() {
     controllerRef.current = controller;
 
     // const chatId = chat.id;
-    const userMessage = { role: "user", content: message };
+    const userMessage = {
+      role: "user",
+      content: message,
+      fileName: attachedFile || null,
+      fileUrl: attachedFileUrl || null,
+      fileType: attachedFileType || null,
+    };
     let updatedMessages = [...chat.messages, userMessage];
 
     setMessage("");
     setLoading(true);
     setIsWriting(false);
+    setAttachedFile(null);
+    setAttachedFileText('');
 
     try {
       let title = chat.title;
@@ -630,6 +647,8 @@ function App() {
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];
+    const fileUrl = URL.createObjectURL(file);
+
     if (!file) return;
 
     if (!token) {
@@ -639,6 +658,8 @@ function App() {
 
     setIsUploading(true);
     setAttachedFile(file.name);
+    setAttachedFileUrl(fileUrl);
+    setAttachedFileType(file.type);
 
     let chatIdToUse = currentChatId;
 
@@ -726,6 +747,9 @@ function App() {
           user={user}
           chatsLoading={chatsLoading}
           deletingId={deletingId}
+          setAttachedFile={setAttachedFile}
+          setAttachedFileText={setAttachedFileText}
+          setIsUploading={setIsUploading}
         />
       </div>
       <div
@@ -799,6 +823,9 @@ function App() {
               user={user}
               chatsLoading={chatsLoading}
               deletingId={deletingId}
+              setAttachedFile={setAttachedFile}
+              setAttachedFileText={setAttachedFileText}
+              setIsUploading={setIsUploading}
             />
           </div>
         )}
@@ -836,18 +863,48 @@ function App() {
 
         {isCreateNewChat ? (
           <div className="welcome-screen">
-            <h1 className="welcome-title">What can I help with?</h1>
+            <h1 className="welcome-title">
+              {isFirstLoad
+                ? "What can I help with?"
+                : "Start a New Conversation"}
+            </h1>
+
+            <p className="welcome-subtitle">
+              {isFirstLoad
+                ? "Ask anything, generate code, or explore AI."
+                : "Upload a document or ask your first question."}
+            </p>
 
             <div className="suggestions">
-              <button onClick={() => setMessage("Explain React hooks")}>
-                Explain React hooks
-              </button>
-              <button onClick={() => setMessage("Write Fibonacci in JS")}>
-                Write Fibonacci in JS
-              </button>
-              <button onClick={() => setMessage("Create a blog on AI")}>
-                Create a blog on AI
-              </button>
+              {isFirstLoad ? (
+                <>
+                  <button onClick={() => setMessage("Explain React hooks")}>
+                    Explain React hooks
+                  </button>
+
+                  <button onClick={() => setMessage("Write Fibonacci in JS")}>
+                    Write Fibonacci in JS
+                  </button>
+
+                  <button onClick={() => setMessage("Create a blog on AI")}>
+                    Create a blog on AI
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => document.getElementById("file-upload").click()}>
+                    Upload Document
+                  </button>
+
+                  <button onClick={() => setMessage("Summarize this PDF")}>
+                    Summarize this PDF
+                  </button>
+
+                  <button onClick={() => setMessage("What is this document about?")}>
+                    What is this document about?
+                  </button>
+                </>
+              )}
             </div>
           </div>
         ) : (
@@ -857,6 +914,18 @@ function App() {
                 key={i}
                 className={`message-wrapper ${msg.role === "user" ? "user-wrapper" : "ai-wrapper"}`}
               >
+              {msg.fileName && (
+                <div 
+                  className="msg-attached-file clickable" 
+                  onClick={() => {
+                    setPreviewFile(msg);
+                    setShowPreviewModal(true);
+                  }}
+                >
+                  <Paperclip size={12} />
+                  <span>{msg.fileName}</span>
+                </div>
+              )}
                 <div
                   // key={i}
                   className={`message ${msg.role === "user" ? "user" : "ai"}`}
@@ -953,7 +1022,19 @@ function App() {
                 ) : (
                   <Paperclip size={12} />
                 )}
-                <span className="attached-file-name">
+                <span 
+                  className="attached-file-name"
+                  style={{ textDecoration: isUploading ? 'none' : 'underline', cursor: isUploading ? 'default' : 'pointer' }} 
+                  onClick={() => {
+                    setPreviewFile({
+                      fileName: attachedFile,
+                      fileUrl: attachedFileUrl,
+                      fileType: attachedFileType,
+                    });
+
+                    if(!isUploading) setShowPreviewModal(true);
+                  }}
+                >
                   {isUploading ? `Uploading ${attachedFile}...` : attachedFile}
                 </span>
                 <button
@@ -1076,6 +1157,43 @@ function App() {
           fetchChats();
         }}
       />
+
+      {showPreviewModal && previewFile && (
+        <div
+          className="preview-overlay"
+          onClick={() => setShowPreviewModal(false)}
+        >
+          <div
+            className="preview-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="close-preview"
+              onClick={() => setShowPreviewModal(false)}
+            >
+              ✕
+            </button>
+
+            <h3>{previewFile.fileName}</h3>
+
+            {previewFile.fileType?.includes("pdf") ? (
+              <iframe
+                src={previewFile.fileUrl}
+                title="PDF Preview"
+                className="preview-frame"
+              />
+            ) : previewFile.fileType?.includes("image") ? (
+              <img
+                src={previewFile.fileUrl}
+                alt="Preview"
+                className="preview-image"
+              />
+            ) : (
+              <p>Preview not available for this file type.</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

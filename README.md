@@ -100,6 +100,8 @@ npm start
 - Day 2: Improved context ranking by structuring retrieved chunks based on relevance and updating system prompt to prioritize higher-ranked chunks. Ensured AI focuses on the most relevant information first, reducing incorrect answers caused by poor context utilization.
 - Day 3: Implemented hybrid search by combining semantic similarity with keyword-based scoring. Added keyword extraction from user queries and boosted chunk relevance using keyword matching, improving retrieval accuracy for structured data like emails, phone numbers, and IDs.
 - Day 4: Implemented conversation memory by passing recent chat messages along with the current query. Enabled AI to understand follow-up questions and maintain conversational context, improving user experience and making interactions more natural.
+- Day 5: Optimized performance by introducing query embedding caching, limiting chunk processing, and reducing context size. Minimized unnecessary computations and API calls to improve response speed and efficiency.
+- Day 6: Improved document Q&A user experience by enhancing new chat UX, showing attached files inside chat history, fixing attachment state across chats, adding responsive file preview modal for PDFs/images, and improving upload interaction flow for better usability and clarity.
 
 
 ## 🚀 Current Capabilities
