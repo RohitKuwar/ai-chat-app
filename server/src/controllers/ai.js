@@ -3,7 +3,13 @@ import Chat from "../models/Chat.js";
 import { createEmbedding } from "../utils/createEmbedding.js";
 import { cosineSimilarity } from "../utils/similarity.js";
 import { getKeywordScore } from "../utils/getKeywordScore.js";
-import { calculator } from "../utils/tools.js";
+import { calculator, getWeather, searchWeb } from "../utils/tools.js";
+
+const toolMap = {
+  calculator,
+  getWeather,
+  searchWeb,
+};
 
 const tools = [
   {
@@ -32,6 +38,40 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "getWeather",
+      description: "Get current weather by city",
+      parameters: {
+        type: "object",
+        properties: {
+          city: {
+            type: "string",
+            description: "City name"
+          }
+        },
+        required: ["city"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "searchWeb",
+      description: "Search information on internet",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "Search query"
+          }
+        },
+        required: ["query"]
+      }
+    }
+  }
 ];
 
 export const generateTitle = async (req, res) => {
@@ -204,13 +244,11 @@ export const chat = async (req, res) => {
 
       console.log("TOOL ARGS:", args);
 
-      let result;
-
-      if (functionName === "calculator") {
-        console.log("EXECUTING CALCULATOR TOOL...");
-        result = calculator(args);
-        console.log("TOOL RESULT:", result);
+      if (!toolMap[functionName]) {
+        throw new Error("Invalid tool");
       }
+
+      const result = await toolMap[functionName](args);
 
       const updatedMessages = [
         ...recentMessages,

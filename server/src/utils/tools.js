@@ -16,3 +16,11 @@ export const calculator = ({ a, b, operation }) => {
       return "Invalid operation";
   }
 };
+
+export const getWeather = ({ city }) => {
+  return `The weather in ${city} is 32°C with clear sky`;
+};
+
+export const searchWeb = ({ query }) => {
+  return `Top search result for "${query}"`;
+};
