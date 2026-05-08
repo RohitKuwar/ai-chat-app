@@ -102,6 +102,7 @@ npm start
 - Day 4: Implemented conversation memory by passing recent chat messages along with the current query. Enabled AI to understand follow-up questions and maintain conversational context, improving user experience and making interactions more natural.
 - Day 5: Optimized performance by introducing query embedding caching, limiting chunk processing, and reducing context size. Minimized unnecessary computations and API calls to improve response speed and efficiency.
 - Day 6: Improved document Q&A user experience by enhancing new chat UX, showing attached files inside chat history, fixing attachment state across chats, adding responsive file preview modal for PDFs/images, and improving upload interaction flow for better usability and clarity.
+- Day 7: Improved system reliability by handling edge cases and validations. Added protection against empty messages, unsupported file types, oversized uploads, duplicate sends, failed upload cleanup, and safer UI rendering to make the application more stable and production-ready.
 
 
 ## 🚀 Current Capabilities

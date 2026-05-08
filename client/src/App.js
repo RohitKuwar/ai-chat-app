@@ -69,6 +69,14 @@ function App() {
 
   const SUMMARY_THRESHOLD = 20;
   const FREE_CHAT_LIMIT = 10;
+  const MAX_SIZE = 5 * 1024 * 1024;
+
+  const allowedTypes = [
+    "application/pdf",
+    "text/plain",
+    "image/png",
+    "image/jpeg",
+  ];
 
   const currentChat = chats.find((c) => c.id === currentChatId);
 
@@ -347,6 +355,8 @@ function App() {
   };  
 
   const sendMessage = async () => {
+    if (loading || isUploading) return;
+
     setAttachedFile(null);
     setAttachedFileText('');
     if (!message.trim() || loading || isStreaming) return;
@@ -656,6 +666,16 @@ function App() {
       return;
     }
 
+    if (!allowedTypes.includes(file.type)) {
+      alert("Unsupported file type");
+      return;
+    }
+
+    if (file.size > MAX_SIZE) {
+      alert("File size should be less than 5MB");
+      return;
+    }
+
     setIsUploading(true);
     setAttachedFile(file.name);
     setAttachedFileUrl(fileUrl);
@@ -709,6 +729,8 @@ function App() {
     } catch (err) {
       console.error("Upload failed:", err);
       setAttachedFile(null);
+      setAttachedFileUrl("");
+      setAttachedFileType("");
     } finally {
       setIsUploading(false);
     }
