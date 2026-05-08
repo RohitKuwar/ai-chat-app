@@ -3,6 +3,36 @@ import Chat from "../models/Chat.js";
 import { createEmbedding } from "../utils/createEmbedding.js";
 import { cosineSimilarity } from "../utils/similarity.js";
 import { getKeywordScore } from "../utils/getKeywordScore.js";
+import { calculator } from "../utils/tools.js";
+
+const tools = [
+  {
+    type: "function",
+    function: {
+      name: "calculator",
+      description: "Perform mathematical calculations",
+      parameters: {
+        type: "object",
+        properties: {
+          a: {
+            type: "number",
+            description: "First number",
+          },
+          b: {
+            type: "number",
+            description: "Second number",
+          },
+          operation: {
+            type: "string",
+            enum: ["add", "subtract", "multiply", "divide"],
+            description: "Math operation",
+          },
+        },
+        required: ["a", "b", "operation"],
+      },
+    },
+  },
+];
 
 export const generateTitle = async (req, res) => {
   try {
@@ -59,10 +89,6 @@ export const chat = async (req, res) => {
     const recentMessages = messages.slice(-4);
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8"); // tells browser how to read data
-    res.setHeader("Transfer-Encoding", "chunked"); // enables chunk streaming
-    res.setHeader("Cache-Control", "no-cache"); // prevents caching of streamed data
-    res.setHeader("Connection", "keep-alive"); // keeps stream alive
-    res.setHeader("Content-Encoding", "identity"); // disables compression to allow real-time streaming
 
     const userQuestion = messages[messages.length - 1].content;
     console.log("User Question:", userQuestion);
@@ -152,7 +178,7 @@ export const chat = async (req, res) => {
     const finalSystemPrompt = hasContext ? systemPrompt + "\n\nContext:\n" + context : systemPrompt;
 
     /* 🔥 SINGLE STREAM CALL (OPTIMIZED) */
-    const stream = await openai.chat.completions.create({
+    const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -161,15 +187,56 @@ export const chat = async (req, res) => {
         },
         ...recentMessages,
       ],
-      stream: true,
+      tools,
+      tool_choice: "auto",
     });
 
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content || "";
-      res.write(content);
+    const toolCall = response.choices[0]?.message?.tool_calls?.[0];
+
+    console.log("TOOL CALL:", toolCall);
+
+    let finalResponse;
+
+    if (toolCall) {
+      const functionName = toolCall.function.name;
+
+      const args = JSON.parse(toolCall.function.arguments);
+
+      console.log("TOOL ARGS:", args);
+
+      let result;
+
+      if (functionName === "calculator") {
+        console.log("EXECUTING CALCULATOR TOOL...");
+        result = calculator(args);
+        console.log("TOOL RESULT:", result);
+      }
+
+      const updatedMessages = [
+        ...recentMessages,
+        response.choices[0].message,
+        {
+          role: "tool",
+          tool_call_id: toolCall.id,
+          content: result.toString(),
+        },
+      ];
+
+      finalResponse = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: finalSystemPrompt,
+          },
+          ...updatedMessages,
+        ],
+      });
+
+      return res.send(finalResponse.choices[0].message.content);
     }
 
-    res.end();
+    return res.send(response.choices[0].message.content);
 
   } catch (error) {
     console.error("STREAM ERROR:", error);
