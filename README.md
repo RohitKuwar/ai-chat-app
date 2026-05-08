@@ -103,6 +103,12 @@ npm start
 - Day 5: Optimized performance by introducing query embedding caching, limiting chunk processing, and reducing context size. Minimized unnecessary computations and API calls to improve response speed and efficiency.
 - Day 6: Improved document Q&A user experience by enhancing new chat UX, showing attached files inside chat history, fixing attachment state across chats, adding responsive file preview modal for PDFs/images, and improving upload interaction flow for better usability and clarity.
 
+### 🔹 Week 8 — AI Agents & Tool Calling
+- Day 1: Learned the fundamentals of AI Agents and understood the difference between traditional LLMs and agent-based systems. Explored how agents combine reasoning, tools, memory, and decision-making to perform real-world actions.
+- Day 2: Learned Function/Tool Calling basics and understood how LLMs request tool execution while the backend safely validates and executes functions. Explored the complete tool-calling architecture and execution flow.
+- Day 3: Built the first AI tool using OpenAI function/tool calling. Implemented calculator tool execution flow where the LLM detects when a tool is needed, backend executes the tool safely, and the final response is generated using tool results. 
+
+---
 
 ## 🚀 Current Capabilities
 
