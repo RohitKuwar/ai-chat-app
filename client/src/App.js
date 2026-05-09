@@ -468,7 +468,7 @@ function App() {
 
       /* 🔥 STEP 2: Chat API */
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/ai/chat`,
+        `http://localhost:5000/api/ai/chat`,
         {
           method: "POST",
           headers: {
