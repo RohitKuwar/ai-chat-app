@@ -3,13 +3,9 @@ import Chat from "../models/Chat.js";
 import { createEmbedding } from "../utils/createEmbedding.js";
 import { cosineSimilarity } from "../utils/similarity.js";
 import { getKeywordScore } from "../utils/getKeywordScore.js";
-import { calculator, getWeather, searchWeb } from "../utils/tools.js";
-
-const toolMap = {
-  calculator,
-  getWeather,
-  searchWeb,
-};
+import { calculator, getWeather, searchWeb, toolMap } from "../utils/tools.js";
+import { executeTool } from "../utils/toolExecutor.js";
+import { AGENT_SYSTEM_PROMPT, AGENT_RAG_PROMPT } from "../utils/prompts.js";
 
 const tools = [
   {
@@ -182,46 +178,7 @@ export const chat = async (req, res) => {
     }
 
     /* 🧠 SYSTEM PROMPT BASED ON MODE */
-    let systemPrompt;
-
-    if (hasContext) {
-      // RAG MODE (document-based)
-      systemPrompt = `
-        You are a helpful AI assistant with access to multiple tools.
-
-        You are given multiple context chunks ranked by relevance.
-
-        Context Rules:
-        - Chunk 1 is the most relevant. Prioritize it.
-        - Use other chunks only if needed.
-        - Do NOT mix unrelated information from different chunks.
-        - If the answer is clearly present in one chunk, use that chunk only.
-        - If the question is related to the context, answer using it.
-        - Do NOT force context if it's irrelevant.
-
-        Tool Usage Rules:
-        - Use tools only when necessary.
-        - Do NOT use tools for common knowledge questions.
-        - Use calculator tool only for mathematical calculations.
-        - Use weather tool only for weather-related questions.
-        - Use search tool only for recent or real-time information.
-        - Prefer direct reasoning when possible.
-
-        General Rules:
-        - Be accurate and clear.
-        - If no tool is needed, answer normally.
-        - Always provide concise and helpful responses.
-        - Maintain conversation continuity.
-        - Use previous messages for context.
-        - Resolve follow-up questions intelligently.
-        - Remember previous tool usage when relevant.
-        - Use previous conversation context to determine whether a tool is needed.
-        `;
-    } else {
-      // NORMAL CHAT MODE
-      systemPrompt =
-        "You are a helpful AI assistant. Always respond in clean markdown format with proper spacing.";
-    }
+    const systemPrompt = hasContext ? AGENT_RAG_PROMPT : AGENT_SYSTEM_PROMPT;
 
     if (mode === "code") {
       systemPrompt =
@@ -274,7 +231,7 @@ export const chat = async (req, res) => {
         return res.status(400).send("Invalid tool requested");
       }
 
-      const result = await toolMap[functionName](args);
+      const result = await executeTool(toolCall);
 
       const updatedMessages = [
         ...recentMessages,
