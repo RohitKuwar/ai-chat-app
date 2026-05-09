@@ -109,6 +109,7 @@ npm start
 - Day 2: Learned Function/Tool Calling basics and understood how LLMs request tool execution while the backend safely validates and executes functions. Explored the complete tool-calling architecture and execution flow.
 - Day 3: Built the first AI tool using OpenAI function/tool calling. Implemented calculator tool execution flow where the LLM detects when a tool is needed, backend executes the tool safely, and the final response is generated using tool results. 
 - Day 4: Implemented multi-tool AI agent architecture by adding multiple tools (calculator, weather, search) and dynamic tool orchestration using a scalable tool map. Enabled the LLM to intelligently choose and execute different tools based on user intent.
+- Day 5: Improved AI agent decision-making by enhancing tool descriptions, adding decision-focused system prompts, implementing optional tool usage flow, validating tool execution, and improving orchestration logic so the AI intelligently decides when and which tools should be used.
 
 ---
 

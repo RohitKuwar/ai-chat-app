@@ -59,7 +59,7 @@ const tools = [
     type: "function",
     function: {
       name: "searchWeb",
-      description: "Search information on internet",
+      description: "Search the web for recent or real-time information not known by the model",
       parameters: {
         type: "object",
         properties: {
@@ -185,19 +185,30 @@ export const chat = async (req, res) => {
     if (hasContext) {
       // RAG MODE (document-based)
       systemPrompt = `
-        You are a helpful AI assistant.
+        You are a helpful AI assistant with access to multiple tools.
 
         You are given multiple context chunks ranked by relevance.
 
-        Rules:
+        Context Rules:
         - Chunk 1 is the most relevant. Prioritize it.
         - Use other chunks only if needed.
         - Do NOT mix unrelated information from different chunks.
         - If the answer is clearly present in one chunk, use that chunk only.
         - If the question is related to the context, answer using it.
-        - If the question is NOT related to the context, answer normally using your knowledge.
         - Do NOT force context if it's irrelevant.
+
+        Tool Usage Rules:
+        - Use tools only when necessary.
+        - Do NOT use tools for common knowledge questions.
+        - Use calculator tool only for mathematical calculations.
+        - Use weather tool only for weather-related questions.
+        - Use search tool only for recent or real-time information.
+        - Prefer direct reasoning when possible.
+
+        General Rules:
         - Be accurate and clear.
+        - If no tool is needed, answer normally.
+        - Always provide concise and helpful responses.
         `;
     } else {
       // NORMAL CHAT MODE
@@ -240,12 +251,20 @@ export const chat = async (req, res) => {
     if (toolCall) {
       const functionName = toolCall.function.name;
 
-      const args = JSON.parse(toolCall.function.arguments);
+      console.log("SELECTED TOOL:", functionName);
+
+      let args;
+
+      try {
+        args = JSON.parse(toolCall.function.arguments);
+      } catch (error) {
+        return res.status(400).send("Invalid tool arguments");
+      }
 
       console.log("TOOL ARGS:", args);
 
       if (!toolMap[functionName]) {
-        throw new Error("Invalid tool");
+        return res.status(400).send("Invalid tool requested");
       }
 
       const result = await toolMap[functionName](args);
