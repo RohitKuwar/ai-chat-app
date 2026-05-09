@@ -126,7 +126,9 @@ export const chat = async (req, res) => {
       return res.status(400).json({ error: "Messages required" });
     }
 
-    const recentMessages = messages.slice(-4);
+    const recentMessages = messages.slice(-6);
+
+    console.log("RECENT MESSAGES:", recentMessages);
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8"); // tells browser how to read data
 
@@ -209,6 +211,11 @@ export const chat = async (req, res) => {
         - Be accurate and clear.
         - If no tool is needed, answer normally.
         - Always provide concise and helpful responses.
+        - Maintain conversation continuity.
+        - Use previous messages for context.
+        - Resolve follow-up questions intelligently.
+        - Remember previous tool usage when relevant.
+        - Use previous conversation context to determine whether a tool is needed.
         `;
     } else {
       // NORMAL CHAT MODE
