@@ -24,3 +24,9 @@ export const getWeather = ({ city }) => {
 export const searchWeb = ({ query }) => {
   return `Top search result for "${query}"`;
 };
+
+export const toolMap = {
+  calculator,
+  getWeather,
+  searchWeb,
+};
