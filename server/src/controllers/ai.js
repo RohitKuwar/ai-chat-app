@@ -131,7 +131,7 @@ export const chat = async (req, res) => {
     res.setHeader("Cache-Control", "no-cache"); // prevents caching of streamed data
     res.setHeader("Connection", "keep-alive"); // keeps stream alive
     res.setHeader("Content-Encoding", "identity"); // disables compression to allow real-time streaming
-    
+
     const userQuestion = messages[messages.length - 1].content;
     console.log("User Question:", userQuestion);
 
@@ -215,14 +215,30 @@ export const chat = async (req, res) => {
     console.log("TOOL CALL:", toolCall);
 
     if (!toolCall) {
+
+    const stream = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      stream: true,
+      messages: [
+        {
+          role: "system",
+          content: finalSystemPrompt,
+        },
+        ...recentMessages,
+      ],
+    });
+
+    for await (const chunk of stream) {
       const content =
-        response.choices[0]?.message?.content || "";
+        chunk.choices[0]?.delta?.content || "";
 
       res.write(content);
-      res.end();
-
-      return;
     }
+
+    res.end();
+
+    return;
+  }
 
     const functionName = toolCall.function.name;
 
