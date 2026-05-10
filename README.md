@@ -104,6 +104,8 @@ npm start
 - Day 6: Improved document Q&A user experience by enhancing new chat UX, showing attached files inside chat history, fixing attachment state across chats, adding responsive file preview modal for PDFs/images, and improving upload interaction flow for better usability and clarity.
 - Day 7: Improved system reliability by handling edge cases and validations. Added protection against empty messages, unsupported file types, oversized uploads, duplicate sends, failed upload cleanup, and safer UI rendering to make the application more stable and production-ready.
 
+---
+
 ### 🔹 Week 8 — AI Agents & Tool Calling
 - Day 1: Learned the fundamentals of AI Agents and understood the difference between traditional LLMs and agent-based systems. Explored how agents combine reasoning, tools, memory, and decision-making to perform real-world actions.
 - Day 2: Learned Function/Tool Calling basics and understood how LLMs request tool execution while the backend safely validates and executes functions. Explored the complete tool-calling architecture and execution flow.
@@ -114,6 +116,9 @@ npm start
 - Day 7: Built a mini AI agent system by combining RAG, multi-tool orchestration, memory-aware reasoning, and dynamic decision-making into a modular production-style AI architecture with improved observability and clean orchestration flow.
 
 ---
+
+### 🔹 Week 9 — Production AI Engineering
+- Day 1: Integrated streaming responses with AI tool calling by separating reasoning and response phases. Implemented non-stream tool selection flow, streaming final AI responses, memory-aware streaming orchestration, modular tool execution, and production-style streaming architecture for improved real-time user experience.
 
 ## 🚀 Current Capabilities
 

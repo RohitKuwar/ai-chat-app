@@ -127,7 +127,11 @@ export const chat = async (req, res) => {
     console.log("RECENT MESSAGES:", recentMessages);
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8"); // tells browser how to read data
-
+    res.setHeader("Transfer-Encoding", "chunked"); // enables chunk streaming
+    res.setHeader("Cache-Control", "no-cache"); // prevents caching of streamed data
+    res.setHeader("Connection", "keep-alive"); // keeps stream alive
+    res.setHeader("Content-Encoding", "identity"); // disables compression to allow real-time streaming
+    
     const userQuestion = messages[messages.length - 1].content;
     console.log("User Question:", userQuestion);
 
@@ -178,7 +182,7 @@ export const chat = async (req, res) => {
     }
 
     /* 🧠 SYSTEM PROMPT BASED ON MODE */
-    const systemPrompt = hasContext ? AGENT_RAG_PROMPT : AGENT_SYSTEM_PROMPT;
+    let systemPrompt = hasContext ? AGENT_RAG_PROMPT : AGENT_SYSTEM_PROMPT;
 
     if (mode === "code") {
       systemPrompt =
@@ -210,54 +214,52 @@ export const chat = async (req, res) => {
 
     console.log("TOOL CALL:", toolCall);
 
-    let finalResponse;
+    if (!toolCall) {
+      const content =
+        response.choices[0]?.message?.content || "";
 
-    if (toolCall) {
-      const functionName = toolCall.function.name;
+      res.write(content);
+      res.end();
 
-      console.log("SELECTED TOOL:", functionName);
-
-      let args;
-
-      try {
-        args = JSON.parse(toolCall.function.arguments);
-      } catch (error) {
-        return res.status(400).send("Invalid tool arguments");
-      }
-
-      console.log("TOOL ARGS:", args);
-
-      if (!toolMap[functionName]) {
-        return res.status(400).send("Invalid tool requested");
-      }
-
-      const result = await executeTool(toolCall);
-
-      const updatedMessages = [
-        ...recentMessages,
-        response.choices[0].message,
-        {
-          role: "tool",
-          tool_call_id: toolCall.id,
-          content: result.toString(),
-        },
-      ];
-
-      finalResponse = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: finalSystemPrompt,
-          },
-          ...updatedMessages,
-        ],
-      });
-
-      return res.send(finalResponse.choices[0].message.content);
+      return;
     }
 
-    return res.send(response.choices[0].message.content);
+    const functionName = toolCall.function.name;
+
+    console.log("SELECTED TOOL:", functionName);
+
+    const result = await executeTool(toolCall);
+
+    const updatedMessages = [
+      ...recentMessages,
+      response.choices[0].message,
+      {
+        role: "tool",
+        tool_call_id: toolCall.id,
+        content: result.toString(),
+      },
+    ];
+
+    const stream = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      stream: true,
+      messages: [
+        {
+          role: "system",
+          content: finalSystemPrompt,
+        },
+        ...updatedMessages,
+      ],
+    });
+
+    for await (const chunk of stream) {
+      const content =
+        chunk.choices[0]?.delta?.content || "";
+
+      res.write(content);
+    }
+
+    res.end();
 
   } catch (error) {
     console.error("STREAM ERROR:", error);
