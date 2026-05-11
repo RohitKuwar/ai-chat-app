@@ -1,4 +1,5 @@
 import axios from "axios";
+import { retry } from "./retry.js";
 
 export const calculator = ({ a, b, operation }) => {
   switch (operation) {
@@ -25,16 +26,18 @@ export const getWeather = async ({ city }) => {
   }
 
   try {
-    const response = await axios.get(
-      `https://api.openweathermap.org/data/2.5/weather`,
-      {
-        params: {
-          q: city,
-          appid: process.env.WEATHER_API_KEY,
-          units: "metric",
-        },
-        timeout: 5000,
-      }
+    const response = await retry(() =>
+      axios.get(
+        `https://api.openweathermap.org/data/2.5/weather`,
+        {
+          params: {
+            q: city,
+            appid: process.env.WEATHER_API_KEY,
+            units: "metric",
+          },
+          timeout: 5000,
+        }
+      )
     );
 
     const data = response.data;
