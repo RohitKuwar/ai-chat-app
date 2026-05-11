@@ -210,12 +210,11 @@ export const chat = async (req, res) => {
       tool_choice: "auto",
     });
 
-    const toolCall = response.choices[0]?.message?.tool_calls?.[0];
+    const toolCalls = response.choices[0]?.message?.tool_calls || [];
 
-    console.log("TOOL CALL:", toolCall);
+    console.log("TOOL CALLS:", toolCalls);
 
-    if (!toolCall) {
-
+    if (toolCalls.length === 0) {
     const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       stream: true,
@@ -231,30 +230,42 @@ export const chat = async (req, res) => {
     for await (const chunk of stream) {
       const content =
         chunk.choices[0]?.delta?.content || "";
-
-      res.write(content);
+        res.write(content);
+      }
+      res.end();
+      return;
     }
 
-    res.end();
+    const toolResults = [];
 
-    return;
-  }
+    for (const toolCall of toolCalls) {
+      const functionName = toolCall.function.name;
 
-    const functionName = toolCall.function.name;
+      console.log("EXECUTING TOOL:", functionName);
 
-    console.log("SELECTED TOOL:", functionName);
+      const result = await executeTool(toolCall);
 
-    const result = await executeTool(toolCall);
+      toolResults.push({
+        toolCall,
+        result,
+      });
+    }
+
+    const toolMessages = toolResults.map(
+      ({ toolCall, result }) => ({
+        role: "tool",
+        tool_call_id: toolCall.id,
+        content: result.toString(),
+      })
+    );
 
     const updatedMessages = [
       ...recentMessages,
       response.choices[0].message,
-      {
-        role: "tool",
-        tool_call_id: toolCall.id,
-        content: result.toString(),
-      },
+      ...toolMessages
     ];
+
+    console.log("TOTAL TOOL CALLS:", toolCalls.length);
 
     const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
