@@ -6,6 +6,7 @@ import { getKeywordScore } from "../utils/getKeywordScore.js";
 import { calculator, getWeather, searchWeb, toolMap } from "../utils/tools.js";
 import { executeTool } from "../utils/toolExecutor.js";
 import { AGENT_SYSTEM_PROMPT, AGENT_RAG_PROMPT } from "../utils/prompts.js";
+import { logEvent, formatDuration } from "../utils/logger.js";
 
 const tools = [
   {
@@ -115,6 +116,7 @@ export const summarize = async (req, res) => {
 };
 
 export const chat = async (req, res) => {
+  const startTime = Date.now();
   try {
     const { messages, mode, chatId } = req.body;
 
@@ -124,7 +126,11 @@ export const chat = async (req, res) => {
 
     const recentMessages = messages.slice(-6);
 
-    console.log("RECENT MESSAGES:", recentMessages);
+    logEvent({
+      type: "RECENT MESSAGES",
+      message: "RECENT MESSAGES BEING PROCESSED",
+      data: recentMessages,
+    });
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8"); // tells browser how to read data
     res.setHeader("Transfer-Encoding", "chunked"); // enables chunk streaming
@@ -133,7 +139,11 @@ export const chat = async (req, res) => {
     res.setHeader("Content-Encoding", "identity"); // disables compression to allow real-time streaming
 
     const userQuestion = messages[messages.length - 1].content;
-    console.log("User Question:", userQuestion);
+    logEvent({
+      type: "USER_QUESTION",
+      message: "User question received",
+      data: userQuestion,
+    });
 
     let chunkEmbeddings = [];
 
@@ -174,9 +184,21 @@ export const chat = async (req, res) => {
       }
 
       context = topChunks.map((c, index) => `Chunk ${index + 1} (Relevance Score: ${c.score.toFixed(2)}):\n${c.text}`).join("\n\n");
-      console.log("Context:", context);
-      console.log("Max Score:", maxScore);
-      console.log("Top Chunks:", topChunks);
+      logEvent({
+        type: "CONTEXT",
+        message: "Context generated",
+        data: context,
+      });
+      logEvent({
+        type: "MAX_SCORE",
+        message: "Max score calculated",
+        data: maxScore,
+      });
+      logEvent({
+        type: "TOP_CHUNKS",
+        message: "Top chunks identified",
+        data: topChunks,
+      });
 
       hasContext = topChunks.length > 0;
     }
@@ -210,9 +232,13 @@ export const chat = async (req, res) => {
       tool_choice: "auto",
     });
 
-    const toolCalls = response.choices[0]?.message?.tool_calls || [];
+    logEvent({
+      type: "TOKEN_USAGE",
+      message: "OpenAI token usage",
+      data: response.usage,
+    });
 
-    console.log("TOOL CALLS:", toolCalls);
+    const toolCalls = response.choices[0]?.message?.tool_calls || [];
 
     if (toolCalls.length === 0) {
     const stream = await openai.chat.completions.create({
@@ -228,10 +254,10 @@ export const chat = async (req, res) => {
     });
 
     for await (const chunk of stream) {
-      const content =
-        chunk.choices[0]?.delta?.content || "";
-        res.write(content);
-      }
+      const content = chunk.choices[0]?.delta?.content || "";
+      res.write(content);
+    }
+
       res.end();
       return;
     }
@@ -239,11 +265,30 @@ export const chat = async (req, res) => {
     const toolResults = [];
 
     for (const toolCall of toolCalls) {
+      logEvent({
+        type: "TOOL_CALL",
+        message: "Executing tool",
+        data: toolCall,
+      });
+
       const functionName = toolCall.function.name;
 
-      console.log("EXECUTING TOOL:", functionName);
+      let result;
 
-      const result = await executeTool(toolCall);
+      try {
+        result = await executeTool(toolCall);
+
+        if (!result) {
+          result = "No valid result returned.";
+        }
+      } catch (error) {
+        result = "Tool execution failed.";
+
+        logEvent({
+          type: "TOOL_ERROR",
+          message: error.message,
+        });
+      }
 
       toolResults.push({
         toolCall,
@@ -265,8 +310,6 @@ export const chat = async (req, res) => {
       ...toolMessages
     ];
 
-    console.log("TOTAL TOOL CALLS:", toolCalls.length);
-
     const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       stream: true,
@@ -280,18 +323,25 @@ export const chat = async (req, res) => {
     });
 
     for await (const chunk of stream) {
-      const content =
-        chunk.choices[0]?.delta?.content || "";
-
+      const content = chunk.choices[0]?.delta?.content || "";
       res.write(content);
     }
-
     res.end();
 
   } catch (error) {
     console.error("STREAM ERROR:", error);
-    res.write("Error generating response");
+    res.write("Something went wrong while processing your request.");
     res.end();
+  } finally {
+    const duration = Date.now() - startTime;
+
+    logEvent({
+      type: "REQUEST_COMPLETE",
+      message: "AI request completed",
+      data: {
+        duration: formatDuration(duration),
+      },
+    });
   }
 };
 

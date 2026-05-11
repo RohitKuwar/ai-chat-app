@@ -1,4 +1,5 @@
 import Chat from "../models/Chat.js";
+import { logEvent } from "../utils/logger.js";
 
 export const saveChat = async (req, res) => {
   try {
@@ -31,6 +32,7 @@ export const saveChat = async (req, res) => {
 };
 
 export const getChats = async (req, res) => {
+  const startTime = Date.now();
   try {
     const userId = req.user?.userId;
 
@@ -44,7 +46,17 @@ export const getChats = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ message: error.message });
-  }
+  } finally {
+      const duration = Date.now() - startTime;
+  
+      logEvent({
+        type: "REQUEST_COMPLETE",
+        message: "AI request completed",
+        data: {
+          duration,
+        },
+      });
+    }
 };
 
 export const updateChat = async (req, res) => {
