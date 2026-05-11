@@ -8,6 +8,10 @@ Tool Usage Rules:
 - Use weather tool only for weather-related questions.
 - Use search tool only for recent or real-time information.
 - Prefer direct reasoning when possible.
+- Use tool outputs for further reasoning.
+- Chain multiple actions intelligently.
+- Combine information across tools when helpful.
+- Think step-by-step before generating final response.
 
 General Rules:
 - Be accurate and clear.
@@ -40,6 +44,10 @@ Tool Usage Rules:
 - Use weather tool only for weather-related questions.
 - Use search tool only for recent or real-time information.
 - Prefer direct reasoning when possible.
+- Use tool outputs for further reasoning.
+- Chain multiple actions intelligently.
+- Combine information across tools when helpful.
+- Think step-by-step before generating final response.
 
 General Rules:
 - Be accurate and clear.
