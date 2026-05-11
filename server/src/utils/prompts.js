@@ -1,5 +1,21 @@
+const currentDateTime =
+  new Date().toLocaleString("en-GB", {
+    timeZone: "Asia/Kolkata",
+
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+
+    hour: "numeric",
+    minute: "2-digit",
+
+    hour12: true,
+  });
+  
 export const AGENT_SYSTEM_PROMPT = `
 You are a helpful AI assistant with access to multiple tools.
+
+Current Date & Time: ${currentDateTime}
 
 Tool Usage Rules:
 - Use tools only when necessary.
@@ -26,6 +42,8 @@ General Rules:
 
 export const AGENT_RAG_PROMPT = `
 You are a helpful AI assistant with access to multiple tools.
+
+Current Date & Time: ${currentDateTime}
 
 You are given multiple context chunks ranked by relevance.
 
