@@ -120,6 +120,7 @@ npm start
 ### 🔹 Week 9 — Production AI Engineering
 - Day 1: Integrated streaming responses with AI tool calling by separating reasoning and response phases. Implemented non-stream tool selection flow, streaming final AI responses, memory-aware streaming orchestration, modular tool execution, and production-style streaming architecture for improved real-time user experience.
 - Day 2: Implemented multi-step AI agent execution loops by enabling support for multiple tool calls within a single reasoning flow. Added dynamic tool orchestration, sequential multi-tool execution, tool result aggregation, and workflow-capable agent behavior with streaming responses and improved observability logs.
+- Day 3: Integrated real-time external APIs into the AI agent by replacing mock weather responses with OpenWeatherMap API integration. Added live weather data fetching, timeout protection, API error handling, improved tool descriptions, and observability logs to make the agent interact with real-world external services reliably.
 
 ## 🚀 Current Capabilities
 

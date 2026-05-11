@@ -38,7 +38,7 @@ const tools = [
     type: "function",
     function: {
       name: "getWeather",
-      description: "Get current weather by city",
+      description: "Get current real-time weather information for a city",
       parameters: {
         type: "object",
         properties: {
