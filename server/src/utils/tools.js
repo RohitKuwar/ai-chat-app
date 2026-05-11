@@ -1,3 +1,5 @@
+import axios from "axios";
+
 export const calculator = ({ a, b, operation }) => {
   switch (operation) {
     case "add":
@@ -17,9 +19,40 @@ export const calculator = ({ a, b, operation }) => {
   }
 };
 
-export const getWeather = ({ city }) => {
-  return `The weather in ${city} is 32°C with clear sky`;
-};
+export const getWeather = async ({ city }) => {
+  if (!city) {
+    return "City name is required.";
+  }
+
+  try {
+    const response = await axios.get(
+      `https://api.openweathermap.org/data/2.5/weather`,
+      {
+        params: {
+          q: city,
+          appid: process.env.WEATHER_API_KEY,
+          units: "metric",
+        },
+        timeout: 5000,
+      }
+    );
+
+    const data = response.data;
+
+    console.log("WEATHER RESPONSE:", data);
+
+    return `
+      City: ${data.name}
+      Temperature: ${data.main.temp}°C
+      Condition: ${data.weather[0].description}
+      Humidity: ${data.main.humidity}%
+      `;
+    } catch (error) {
+      console.error("WEATHER API ERROR:", error);
+
+      return "Unable to fetch weather data right now.";
+    }
+  };
 
 export const searchWeb = ({ query }) => {
   return `Top search result for "${query}"`;
