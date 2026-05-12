@@ -780,6 +780,52 @@ body {
   color: #f87171 !important;
 }
 
+.mic-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #9b9b9b;
+  padding: 4px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: color 150ms, background 150ms;
+}
+
+.mic-btn:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Recording / glowing state ── */
+.mic-btn.mic-recording {
+  color: #f87171;
+  border-radius: 50%;
+  background: rgba(248, 113, 113, 0.12);
+  box-shadow:
+    0 0 6px rgba(248, 113, 113, 0.5),
+    0 0 12px rgba(248, 113, 113, 0.3),
+    0 0 24px rgba(248, 113, 113, 0.15);
+  animation: micGlow 1.2s ease-in-out infinite;
+}
+
+@keyframes micGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 6px rgba(248, 113, 113, 0.5),
+      0 0 12px rgba(248, 113, 113, 0.3),
+      0 0 24px rgba(248, 113, 113, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 10px rgba(248, 113, 113, 0.8),
+      0 0 20px rgba(248, 113, 113, 0.5),
+      0 0 36px rgba(248, 113, 113, 0.25);
+  }
+}
+
 /* Dropdown wrapper */
 .mode-wrapper {
   display: flex;

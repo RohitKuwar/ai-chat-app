@@ -18,7 +18,8 @@ import {
   Download,
   Check,
   CircleUserRound,
-  Paperclip
+  Paperclip,
+  Mic
 } from "lucide-react";
 import AuthModal from "./AuthModal";
 
@@ -57,7 +58,7 @@ function App() {
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [previewFile, setPreviewFile] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
-  
+  const [isListening, setIsListening] = useState(false);
   const dropdownRef = useRef(null);
   const inputRef = useRef();
   const chatEndRef = useRef(null);
@@ -79,6 +80,8 @@ function App() {
   ];
 
   const currentChat = chats.find((c) => c.id === currentChatId);
+
+  console.log('isListening', isListening);
 
   // MOBILE
   useEffect(() => {
@@ -746,6 +749,40 @@ function App() {
     setIsUploading(false);
   };
 
+  const startListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Speech Recognition is not supported in this browser.");
+      return;
+    }
+    
+    const recognition = new SpeechRecognition();
+
+    recognition.lang = "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => setIsListening(true);
+
+    recognition.onend = () => setIsListening(false);
+
+    recognition.onresult = (event) => {
+      let transcript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setMessage(transcript);
+    }
+
+    recognition.onerror = (event) => {
+      console.error("Speech error:", event.error);
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
   return (
     <div className="app">
       <div
@@ -1139,17 +1176,14 @@ function App() {
               }}
             />
 
-            {/* 🗑 Clear Chat */}
-            {/* <button
-              onClick={clearMessages}
-              disabled={loading || isStreaming}
-              className="clear-btn"
-              title="clear chat"
+            <button 
+              className={`mic-btn ${isListening ? 'mic-recording' : ''}`} 
+              title={isListening ? 'Listening...' : 'Voice input'} 
+              disabled={loading || isUploading} 
+              onClick={startListening}
             >
-              <Trash2 size={18} />
-            </button> */}
-
-            {/* <Paperclip size={18} color="white" /> */}
+              <Mic size={18} />
+            </button>
 
             {/* Send & Abort Button */}
             {isStreaming ? (
