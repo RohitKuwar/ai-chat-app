@@ -780,6 +780,35 @@ body {
   color: #f87171 !important;
 }
 
+.voice-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #9b9b9b;
+  padding: 4px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: color 150ms, background 150ms;
+}
+
+.voice-toggle-btn:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Active (unmuted) state ── */
+.voice-toggle-btn.voice-active {
+  color: #818cf8;
+}
+
+.voice-toggle-btn.voice-active:hover {
+  background: rgba(129, 140, 248, 0.1);
+  color: #a5b4fc;
+}
+
 .mic-btn {
   display: flex;
   align-items: center;

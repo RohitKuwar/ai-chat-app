@@ -19,7 +19,9 @@ import {
   Check,
   CircleUserRound,
   Paperclip,
-  Mic
+  Mic,
+  Megaphone,
+  MegaphoneOff
 } from "lucide-react";
 import AuthModal from "./AuthModal";
 
@@ -59,6 +61,9 @@ function App() {
   const [previewFile, setPreviewFile] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const dropdownRef = useRef(null);
   const inputRef = useRef();
   const chatEndRef = useRef(null);
@@ -80,8 +85,6 @@ function App() {
   ];
 
   const currentChat = chats.find((c) => c.id === currentChatId);
-
-  console.log('isListening', isListening);
 
   // MOBILE
   useEffect(() => {
@@ -530,6 +533,11 @@ function App() {
         );
       }
 
+      const cleanTextForSpeech = text => text.replace(/```[\s\S]*?```/g, "").replace(/[#*_>`-]/g, "").trim();
+
+      if(voiceEnabled) {
+        speakText(cleanTextForSpeech(fullTextRef.current));
+      }
       setIsStreaming(false);
       setIsWriting(false);
 
@@ -781,6 +789,27 @@ function App() {
     };
 
     recognition.start();
+  };
+
+  const speakText = (text) => {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    utterance.lang = "en-US";
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const toggleVoice = () => {
+    if (voiceEnabled) {
+      window.speechSynthesis.pause();
+    } else {
+      if(window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+    }
+    setVoiceEnabled((prev) => !prev);
   };
 
   return (
@@ -1175,6 +1204,22 @@ function App() {
                 }
               }}
             />
+
+            <button
+              className={`voice-toggle-btn ${voiceEnabled ? 'voice-active' : ''}`}
+              onClick={toggleVoice}
+              title={
+                voiceEnabled
+                  ? "Mute Voice"
+                  : "Unmute Voice"
+              }
+            >
+              {voiceEnabled ? (
+                <Megaphone size={18} />
+              ) : (
+                <MegaphoneOff size={18} />
+              )}
+            </button>
 
             <button 
               className={`mic-btn ${isListening ? 'mic-recording' : ''}`} 

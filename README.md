@@ -123,6 +123,8 @@ npm start
 - Day 3: Integrated real-time external APIs into the AI agent by replacing mock weather responses with OpenWeatherMap API integration. Added live weather data fetching, timeout protection, API error handling, improved tool descriptions, and observability logs to make the agent interact with real-world external services reliably.
 - Day 4: Improved the AI agent with workflow orchestration and task chaining capabilities by enhancing reasoning prompts, enabling tool-output-based reasoning, coordinating multi-tool information synthesis, and adding workflow observability logs to support smarter contextual and recommendation-based AI responses.
 - Day 5: Improved production reliability and observability of the AI agent by implementing structured logging, retry mechanisms for external APIs, failure-safe multi-tool execution, request duration tracking, token usage monitoring, guardrails for invalid tool responses, and production-friendly error handling to make the orchestration system more resilient and debuggable.
+- Day 6: Added Voice AI input capability using browser Speech Recognition API with real-time live transcription, push-to-talk voice UX, microphone state management, interim speech results, and dynamic speech-to-text input handling to enable multimodal AI interaction through voice conversations.
+- Day 7: Added Text-to-Speech (TTS) support using the browser Speech Synthesis API to enable AI voice responses. Implemented automatic AI speech playback, speech cleanup for markdown/code responses, voice enable/disable toggle, pause/resume functionality, speaking state management, and a complete Voice → AI → Voice multimodal interaction pipeline.
 
 ## 🚀 Current Capabilities
 
