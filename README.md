@@ -126,6 +126,11 @@ npm start
 - Day 6: Added Voice AI input capability using browser Speech Recognition API with real-time live transcription, push-to-talk voice UX, microphone state management, interim speech results, and dynamic speech-to-text input handling to enable multimodal AI interaction through voice conversations.
 - Day 7: Added Text-to-Speech (TTS) support using the browser Speech Synthesis API to enable AI voice responses. Implemented automatic AI speech playback, speech cleanup for markdown/code responses, voice enable/disable toggle, pause/resume functionality, speaking state management, and a complete Voice → AI → Voice multimodal interaction pipeline.
 
+---
+
+### 🔹 Week 10 — Multimodal AI Systems
+- Day 1: Integrated streaming responses with AI tool calling by separating reasoning and response phases. Implemented non-stream tool selection flow, streaming final AI responses, memory-aware streaming orchestration, modular tool execution, and production-style streaming architecture for improved real-time user experience.
+
 ## 🚀 Current Capabilities
 
 - 💬 Chat with AI (context-aware)
