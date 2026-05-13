@@ -1392,6 +1392,10 @@ body {
   white-space: nowrap;
 }
 
+.msg-attached-file span:hover {
+  text-decoration: underline;
+}
+
 .preview-overlay {
   position: fixed;
   inset: 0;
@@ -1428,6 +1432,7 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  overflow: auto;
 }
 
 .close-preview {

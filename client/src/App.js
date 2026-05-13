@@ -25,6 +25,19 @@ import {
 } from "lucide-react";
 import AuthModal from "./AuthModal";
 
+const convertToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      resolve(reader.result);
+    };
+    reader.onerror = (error) => {
+      reject(error);
+    };
+  });
+};
+
 function App() {
   const [message, setMessage] = useState("");
   const [chats, setChats] = useState([]);
@@ -64,6 +77,8 @@ function App() {
   // eslint-disable-next-line no-unused-vars
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
+
   const dropdownRef = useRef(null);
   const inputRef = useRef();
   const chatEndRef = useRef(null);
@@ -82,6 +97,8 @@ function App() {
     "text/plain",
     "image/png",
     "image/jpeg",
+    "image/jpg",
+    "image/webp",
   ];
 
   const currentChat = chats.find((c) => c.id === currentChatId);
@@ -472,9 +489,15 @@ function App() {
         ),
       );
 
+      let imageBase64 = null;
+
+      if (selectedImage) {
+        imageBase64 = await convertToBase64(selectedImage);
+      }
+
       /* 🔥 STEP 2: Chat API */
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/ai/chat`,
+        `http://localhost:5000/api/ai/chat`,
         {
           method: "POST",
           headers: {
@@ -484,7 +507,8 @@ function App() {
           body: JSON.stringify({
             messages: updatedMessages,
             mode,
-            chatId: chatId
+            chatId: chatId,
+            image: imageBase64,
           }),
         },
       );
@@ -599,6 +623,7 @@ function App() {
             );
           }
       }
+      setSelectedImage(null);
 }
     } catch (err) {
       console.error("Error:", err);
@@ -692,6 +717,10 @@ function App() {
     setAttachedFileUrl(fileUrl);
     setAttachedFileType(file.type);
 
+    if (file.type.startsWith("image/")) {
+      setSelectedImage(file);
+    }
+
     let chatIdToUse = currentChatId;
 
     try {
@@ -755,6 +784,7 @@ function App() {
     setAttachedFile(null);
     setAttachedFileText('');
     setIsUploading(false);
+    setSelectedImage(null);
   };
 
   const startListening = () => {
@@ -1104,6 +1134,16 @@ function App() {
           </div>
         )}
 
+        {/* {
+          selectedImage && (
+            <img
+              src={URL.createObjectURL(selectedImage)}
+              alt="preview"
+              className="preview-img"
+            />
+          )
+        } */}
+
         {/* Input Area */}
         <div className="input-wrapper">
           {attachedFile && (
@@ -1168,8 +1208,6 @@ function App() {
                 </div>
               )}
             </div>
-
-            {/* <input type="file" onChange={handleUpload} /> */}
 
             <input
               type="file"

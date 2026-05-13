@@ -118,7 +118,7 @@ export const summarize = async (req, res) => {
 export const chat = async (req, res) => {
   const startTime = Date.now();
   try {
-    const { messages, mode, chatId } = req.body;
+    const { messages, mode, chatId, image } = req.body;
 
     if (!messages || !messages.length) {
       return res.status(400).json({ error: "Messages required" });
@@ -139,6 +139,19 @@ export const chat = async (req, res) => {
     res.setHeader("Content-Encoding", "identity"); // disables compression to allow real-time streaming
 
     const userQuestion = messages[messages.length - 1].content;
+    const userContent = image ? [
+      {
+        type: "text",
+        text: userQuestion,
+      },
+      {
+        type: "image_url",
+        image_url: {
+          url: image,
+        },
+      },
+    ] : userQuestion;
+
     logEvent({
       type: "USER_QUESTION",
       message: "User question received",
@@ -218,16 +231,24 @@ export const chat = async (req, res) => {
 
     const finalSystemPrompt = hasContext ? systemPrompt + "\n\nContext:\n" + context : systemPrompt;
 
+    const openAIMessages = [
+      {
+        role: "system",
+        content: finalSystemPrompt,
+      },
+
+      ...recentMessages.slice(0, -1),
+
+      {
+        role: "user",
+        content: userContent,
+      },
+    ];
+
     /* 🔥 SINGLE STREAM CALL (OPTIMIZED) */
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: finalSystemPrompt,
-        },
-        ...recentMessages,
-      ],
+      messages: openAIMessages,
       tools,
       tool_choice: "auto",
     });
@@ -244,13 +265,7 @@ export const chat = async (req, res) => {
     const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       stream: true,
-      messages: [
-        {
-          role: "system",
-          content: finalSystemPrompt,
-        },
-        ...recentMessages,
-      ],
+      messages: openAIMessages,
     });
 
     for await (const chunk of stream) {
@@ -304,21 +319,13 @@ export const chat = async (req, res) => {
       })
     );
 
-    const updatedMessages = [
-      ...recentMessages,
-      response.choices[0].message,
-      ...toolMessages
-    ];
-
     const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       stream: true,
       messages: [
-        {
-          role: "system",
-          content: finalSystemPrompt,
-        },
-        ...updatedMessages,
+        ...openAIMessages,
+        response.choices[0].message,
+        ...toolMessages,
       ],
     });
 
