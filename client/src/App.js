@@ -766,7 +766,6 @@ function App() {
 
       const data = await res.json();
       setAttachedFileUrl(data.fileUrl);
-      console.log("Upload success:", data);
 
     } catch (err) {
       console.error("Upload failed:", err);
