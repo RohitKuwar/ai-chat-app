@@ -85,7 +85,8 @@ export const uploadFile = async (req, res) => {
     res.status(200).json({
       message: "File processed successfully",
       totalChunks: chunkEmbeddings.length,
-      data: chunkEmbeddings
+      data: chunkEmbeddings,
+      fileUrl: `${process.env.REACT_APP_API_URL}/uploads/${file.filename}`
     });
 
   } catch (error) {
