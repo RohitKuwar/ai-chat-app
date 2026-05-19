@@ -7,6 +7,7 @@ import { calculator, getWeather, searchWeb, toolMap } from "../utils/tools.js";
 import { executeTool } from "../utils/toolExecutor.js";
 import { AGENT_SYSTEM_PROMPT, AGENT_RAG_PROMPT } from "../utils/prompts.js";
 import { logEvent, formatDuration } from "../utils/logger.js";
+import { formatMessagesForOpenAI } from "../utils/formatMessagesForOpenAI.js";
 
 const tools = [
   {
@@ -236,13 +237,7 @@ export const chat = async (req, res) => {
         role: "system",
         content: finalSystemPrompt,
       },
-
-      ...recentMessages.slice(0, -1),
-
-      {
-        role: "user",
-        content: userContent,
-      },
+      ...formatMessagesForOpenAI(recentMessages)
     ];
 
     /* 🔥 SINGLE STREAM CALL (OPTIMIZED) */

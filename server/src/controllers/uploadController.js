@@ -2,6 +2,7 @@ import Chat from "../models/Chat.js";
 import { chunkText } from "../utils/chunkText.js";
 import { createEmbedding } from "../utils/createEmbedding.js";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+import fs from "fs";
 
 export const uploadFile = async (req, res) => {
   try {
@@ -18,9 +19,17 @@ export const uploadFile = async (req, res) => {
 
     let extractedText = "";
 
+    if (file.mimetype.startsWith("image/")) {
+      const fileUrl = `${process.env.REACT_APP_API_URL}/uploads/${file.filename}`;
+      return res.status(200).json({
+        message: "Image uploaded successfully",
+        fileUrl,
+      });
+    }
+
     if (file.mimetype === "application/pdf") {
       const loadingTask = pdfjsLib.getDocument({
-        data: new Uint8Array(file.buffer),
+        data: new Uint8Array(fs.readFileSync(file.path)),
         useWorkerFetch: false,
         isEvalSupported: false,
         useSystemFonts: true,
@@ -43,7 +52,7 @@ export const uploadFile = async (req, res) => {
 
       extractedText = textContent;
     } else {
-      extractedText = file.buffer.toString();
+      extractedText = fs.readFileSync(file.path, "utf-8");
     }
 
     const cleanText = extractedText.toLowerCase().replace(/\n/g, " ").replace(/\s+/g, " ").trim();
@@ -76,7 +85,8 @@ export const uploadFile = async (req, res) => {
     res.status(200).json({
       message: "File processed successfully",
       totalChunks: chunkEmbeddings.length,
-      data: chunkEmbeddings
+      data: chunkEmbeddings,
+      fileUrl: `${process.env.REACT_APP_API_URL}/uploads/${file.filename}`
     });
 
   } catch (error) {
