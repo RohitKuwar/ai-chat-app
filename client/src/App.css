@@ -1449,6 +1449,162 @@ body {
   cursor: pointer;
 }
 
+/* ══════════════════════════════
+   IMAGE ATTACHMENT IN CHAT
+══════════════════════════════ */
+.chat-image-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.chat-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 10px;
+  object-fit: cover;
+  transition: filter 200ms ease;
+}
+
+/* Dark overlay on hover */
+.chat-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  border-radius: 10px;
+}
+
+.chat-image-wrap:hover .chat-image-overlay {
+  opacity: 1;
+}
+
+.chat-image-wrap:hover .chat-image {
+  filter: brightness(0.7);
+}
+
+/* ══════════════════════════════
+   DOCUMENT ATTACHMENT IN CHAT
+══════════════════════════════ */
+.msg-doc-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms;
+  max-width: 280px;
+}
+
+.msg-doc-chip:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.msg-doc-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #818cf8;
+  flex-shrink: 0;
+}
+
+.msg-doc-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.msg-doc-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.msg-doc-meta {
+  font-size: 11px;
+  color: #c9cdd3;
+}
+
+.msg-doc-eye {
+  color: #64748b;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 150ms, color 150ms;
+}
+
+.msg-doc-chip:hover .msg-doc-eye {
+  opacity: 1;
+  color: #818cf8;
+}
+
+/* ── Mobile adjustments ── */
+@media (max-width: 768px) {
+  .chat-image-wrap {
+    width: 72px;
+    height: 72px;
+  }
+
+  /* Always show overlay hint on mobile (no hover) */
+  .chat-image-overlay {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.3);
+    /* font-size: 12px;
+    justify-content: flex-end;
+    padding-bottom: 10px; */
+  }
+
+  .chat-image-overlay > span {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .chat-image-wrap .chat-image {
+    filter: brightness(0.9);
+  }
+
+  .msg-doc-chip {
+    max-width: 100%;
+  }
+
+  .msg-doc-eye {
+    opacity: 1; /* always visible on mobile */
+  }
+}
+
 @media (max-width: 768px) {
   .preview-modal {
     height: 95vh;

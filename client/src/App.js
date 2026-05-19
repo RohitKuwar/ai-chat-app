@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
@@ -21,7 +22,8 @@ import {
   Paperclip,
   Mic,
   Megaphone,
-  MegaphoneOff
+  MegaphoneOff,
+  Eye
 } from "lucide-react";
 import AuthModal from "./AuthModal";
 
@@ -64,7 +66,6 @@ function App() {
   });
   const [isUploading, setIsUploading] = useState(false);
   const [attachedFile, setAttachedFile] = useState(null);
-  // eslint-disable-next-line no-unused-vars
   const [attachedFileText, setAttachedFileText] = useState('');
   const [attachedFileUrl, setAttachedFileUrl] = useState("");
   const [attachedFileType, setAttachedFileType] = useState("");
@@ -74,7 +75,6 @@ function App() {
   const [previewFile, setPreviewFile] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  // eslint-disable-next-line no-unused-vars
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -440,6 +440,12 @@ function App() {
     const controller = new AbortController();
     controllerRef.current = controller;
 
+    let imageBase64 = null;
+
+    if (selectedImage) {
+      imageBase64 = await convertToBase64(selectedImage);
+    }
+
     // const chatId = chat.id;
     const userMessage = {
       role: "user",
@@ -447,7 +453,10 @@ function App() {
       fileName: attachedFile || null,
       fileUrl: attachedFileUrl || null,
       fileType: attachedFileType || null,
+      imageUrl: attachedFileType?.startsWith("image/") ? attachedFileUrl : null,
     };
+    setSelectedImage(null);
+
     let updatedMessages = [...chat.messages, userMessage];
 
     setMessage("");
@@ -458,9 +467,9 @@ function App() {
 
     try {
       let title = chat.title;
-
+      let aiMessages = [...updatedMessages];
       /* 🔥 STEP 1: Summarize if needed */
-      if (updatedMessages.length > SUMMARY_THRESHOLD) {
+      if (aiMessages.length > SUMMARY_THRESHOLD) {
         const summaryRes = await axios.post(
           `${process.env.REACT_APP_API_URL}/api/ai/summarize`,
           {
@@ -475,25 +484,19 @@ function App() {
 
         const summary = summaryRes.data.summary;
 
-        updatedMessages = [
-          { role: "system", content: summary },
-          ...updatedMessages.slice(-3),
+        aiMessages = [
+          { role: "system", content: `Conversation Summary: ${summary}` },
+          ...aiMessages.slice(-3),
         ];
       }
 
       setChats((prev) =>
         prev.map((chat) =>
           chat.id === chatId
-            ? { ...chat, messages: updatedMessages, title }
+            ? { ...chat, messages: aiMessages, title }
             : chat,
         ),
       );
-
-      let imageBase64 = null;
-
-      if (selectedImage) {
-        imageBase64 = await convertToBase64(selectedImage);
-      }
 
       /* 🔥 STEP 2: Chat API */
       const response = await fetch(
@@ -507,8 +510,7 @@ function App() {
           body: JSON.stringify({
             messages: updatedMessages,
             mode,
-            chatId: chatId,
-            image: imageBase64,
+            chatId: chatId
           }),
         },
       );
@@ -763,7 +765,7 @@ function App() {
       });
 
       const data = await res.json();
-
+      setAttachedFileUrl(data.fileUrl);
       console.log("Upload success:", data);
 
     } catch (err) {
@@ -1038,7 +1040,7 @@ function App() {
                 key={i}
                 className={`message-wrapper ${msg.role === "user" ? "user-wrapper" : "ai-wrapper"}`}
               >
-              {msg.fileName && (
+              {/* {msg.fileName && (
                 <div 
                   className="msg-attached-file clickable" 
                   onClick={() => {
@@ -1049,11 +1051,43 @@ function App() {
                   <Paperclip size={12} />
                   <span>{msg.fileName}</span>
                 </div>
-              )}
+              )} */}
                 <div
                   // key={i}
                   className={`message ${msg.role === "user" ? "user" : "ai"}`}
                 >
+                  {/* ── Image attachment ── */}
+                  {msg.fileType?.includes("image") && (
+                    <div
+                      className="chat-image-wrap"
+                      onClick={() => { setPreviewFile(msg); setShowPreviewModal(true); }}
+                    >
+                      <img src={msg.fileUrl} alt={msg.fileName} className="chat-image" />
+                      <div className="chat-image-overlay">
+                        <Eye size={18} />
+                        <span>View full image</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── PDF / document attachment ── */}
+                  {msg.fileName && !msg.fileType?.includes("image") && (
+                    <div
+                      className="msg-doc-chip"
+                      onClick={() => { setPreviewFile(msg); setShowPreviewModal(true); }}
+                    >
+                      <div className="msg-doc-icon">
+                        <FileText size={20} color="white" />
+                      </div>
+                      <div className="msg-doc-info">
+                        <span className="msg-doc-name">{msg.fileName}</span>
+                        <span className="msg-doc-meta">Click to preview</span>
+                      </div>
+                      <Eye size={14} className="msg-doc-eye" />
+                    </div>
+                  )}
+
+                  {/* ── Message text ── */}
                   <ReactMarkdown
                     components={{
                       code: CodeBlock,
