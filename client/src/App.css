@@ -1042,6 +1042,8 @@ body {
   cursor: pointer;
   color: #94a3b8;
   transition: all 0.2s ease;
+  background: none;
+  border: none;
 }
 
 .copy-chat:hover {
@@ -1053,6 +1055,8 @@ body {
   cursor: pointer;
   color: #94a3b8;
   transition: all 0.2s ease;
+  background: none;
+  border: none;
 }
 
 .export-chat:hover {
@@ -1062,7 +1066,7 @@ body {
 
 .message-actions {
   display: flex;
-  gap: 12px;
+  gap: 2px;
   margin-top: 6px;
   justify-content: flex-start;
 }
@@ -1077,6 +1081,8 @@ body {
 .copied-chat-icon {
   color: #22c55e;
   transition: all 0.2s ease;
+  background: none;
+  border: none;
 }
 
 .message-wrapper {

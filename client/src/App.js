@@ -1214,7 +1214,7 @@ function App() {
                   {copiedId === i ? (
                     <span className="msg-action-btn copied-feedback">
                       <Check size={12} />
-                      <span>Copied</span>
+                      {/* <span>Copied</span> */}
                     </span>
                   ) : (
                     <button
@@ -1228,7 +1228,7 @@ function App() {
                   )}
 
                   {/* Regenerate — only for last AI message */}
-                  {msg.role === "assistant" && (
+                  {msg.role === "assistant" && i === currentChat.messages.length - 1 && (
                     <button
                       className="msg-action-btn"
                       title="Regenerate response"
@@ -1266,28 +1266,28 @@ function App() {
             {!isStreaming && currentChat?.messages.length > 0 && (
               <div className="message-actions">
                 {copiedChat ? (
-                  <Check
-                    size={16}
+                  <button
                     className="copied-chat-icon"
                     title="Chat Copied"
-                    data-tooltip="Chat Copied"
-                  />
+                  >
+                    <Check size={16} />
+                  </button>
                 ) : (
-                  <Copy
-                    size={16}
-                    onClick={handleCopyChat}
+                  <button
                     className="copy-chat"
                     title="Copy Chat"
-                    data-tooltip="Copy Chat"
-                  />
+                    onClick={handleCopyChat}
+                  >
+                    <Copy size={16} />
+                  </button>
                 )}
-                <Download
-                  size={16}
-                  onClick={exportChat}
+                <button
                   className="export-chat"
                   title="Export Chat"
-                  data-tooltip="Export Chat"
-                />
+                  onClick={exportChat}
+                >
+                  <Download size={16} />
+                </button>
               </div>
             )}
           </div>
