@@ -23,7 +23,8 @@ import {
   Mic,
   Megaphone,
   MegaphoneOff,
-  Eye
+  Eye,
+  RotateCcw
 } from "lucide-react";
 import AuthModal from "./AuthModal";
 
@@ -295,6 +296,118 @@ function App() {
     }, 1500);
   };
 
+  const regenerateResponse = async (assistantIndex) => {
+    if (isStreaming) return;
+
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
+    try {
+      const chat = chats.find((c) => c.id === currentChatId);
+
+      if (!chat) return;
+
+      let updatedMessages = [...chat.messages];
+
+      // 🔥 Remove old assistant response
+      updatedMessages.splice(assistantIndex, 1);
+
+      // 🔥 Add empty assistant placeholder
+      updatedMessages.push({
+        role: "assistant",
+        content: "",
+      });
+
+      // 🔥 Update UI immediately
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === currentChatId
+            ? {
+                ...chat,
+                messages: updatedMessages,
+              }
+            : chat,
+        ),
+      );
+
+      setIsStreaming(true);
+      setIsWriting(false);
+
+      fullTextRef.current = "";
+
+      // 🔥 Reuse same API
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/ai/chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            messages: updatedMessages.slice(0, -1), // remove empty placeholder
+            mode,
+            chatId: currentChatId,
+          }),
+          signal: controller.signal,
+        },
+      );
+
+      const reader = response.body.getReader();
+
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+
+        fullTextRef.current += chunk;
+
+        // 🔥 Writing started
+        if (!isWriting && chunk.trim() !== "") {
+          setIsWriting(true);
+        }
+
+        setChats((prev) =>
+          prev.map((chat) => {
+            if (chat.id !== currentChatId) {
+              return chat;
+            }
+
+            const msgs = [...chat.messages];
+
+            msgs[msgs.length - 1].content = fullTextRef.current;
+
+            return {
+              ...chat,
+              messages: msgs,
+            };
+          }),
+        );
+      }
+
+      // 🔥 Optional speech
+      if (voiceEnabled) {
+        const cleanTextForSpeech = (text) =>
+          text
+            .replace(/```[\s\S]*?```/g, "")
+            .replace(/[#*_>`-]/g, "")
+            .trim();
+        const cleanText = cleanTextForSpeech(fullTextRef.current);
+
+        speakText(cleanText);
+      }
+    } catch (error) {
+      console.error("Regeneration failed:", error);
+    } finally {
+      setIsStreaming(false);
+      setIsWriting(false);
+    }
+  };
+
   useEffect(() => {
     setIsCreateNewChat(true);
     setCurrentChatId(null);
@@ -512,6 +625,7 @@ function App() {
             mode,
             chatId: chatId
           }),
+          signal: controller.signal,
         },
       );
 
@@ -630,7 +744,6 @@ function App() {
     } catch (err) {
       console.error("Error:", err);
       setIsStreaming(false);
-      alert("Something went wrong: " + (err?.message || err));
     } finally {
       setLoading(false);
     }
@@ -1110,7 +1223,20 @@ function App() {
                       onClick={() => handleCopy(msg.content, i)}
                     >
                       <Copy size={12} />
-                      <span>Copy</span>
+                      {/* <span>Copy</span> */}
+                    </button>
+                  )}
+
+                  {/* Regenerate — only for last AI message */}
+                  {msg.role === "assistant" && (
+                    <button
+                      className="msg-action-btn"
+                      title="Regenerate response"
+                      onClick={() => regenerateResponse(i)}
+                      disabled={loading || isStreaming}
+                    >
+                      <RotateCcw size={12} />
+                      {/* <span>Regenerate</span> */}
                     </button>
                   )}
                 </div>
