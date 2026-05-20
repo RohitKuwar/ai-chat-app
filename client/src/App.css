@@ -1136,6 +1136,15 @@ body {
   cursor: default;
 }
 
+.msg-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.msg-action-btn:disabled svg {
+  animation: spin 800ms linear infinite;
+}
+
 .suggestions {
   display: flex;
   flex-wrap: wrap;
