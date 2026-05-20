@@ -21,10 +21,10 @@ import {
   CircleUserRound,
   Paperclip,
   Mic,
-  Megaphone,
-  MegaphoneOff,
   Eye,
-  RotateCcw
+  RotateCcw,
+  Volume2,
+  VolumeOff
 } from "lucide-react";
 import AuthModal from "./AuthModal";
 
@@ -1405,16 +1405,12 @@ function App() {
             <button
               className={`voice-toggle-btn ${voiceEnabled ? 'voice-active' : ''}`}
               onClick={toggleVoice}
-              title={
-                voiceEnabled
-                  ? "Mute Voice"
-                  : "Unmute Voice"
-              }
+              title={voiceEnabled ? "Stop Voice Playback" : "Read Response Aloud"}
             >
               {voiceEnabled ? (
-                <Megaphone size={18} />
+                <Volume2 size={18} />
               ) : (
-                <MegaphoneOff size={18} />
+                <VolumeOff size={18} />
               )}
             </button>
 
