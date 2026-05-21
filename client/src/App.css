@@ -1586,6 +1586,112 @@ body {
   color: #818cf8;
 }
 
+/* ══════════════════════════════
+   CHAT ERROR
+══════════════════════════════ */
+.chat-error-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 8px;
+  animation: fadeIn 200ms ease;
+}
+
+.chat-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 480px;
+  box-sizing: border-box;
+}
+
+.chat-error-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-error-icon {
+  color: #f87171;
+  flex-shrink: 0;
+}
+
+.chat-error span {
+  font-size: 13px;
+  color: #fca5a5;
+  line-height: 1.4;
+}
+
+.chat-error-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Retry button */
+.chat-error-retry {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  color: #fca5a5;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms;
+  white-space: nowrap;
+}
+
+.chat-error-retry:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fff;
+}
+
+/* Dismiss button */
+.chat-error-dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 4px;
+  border-radius: 5px;
+  transition: color 150ms, background 150ms;
+}
+
+.chat-error-dismiss:hover {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .chat-error {
+    max-width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chat-error-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
 /* ── Mobile adjustments ── */
 @media (max-width: 768px) {
   .chat-image-wrap {

@@ -24,7 +24,8 @@ import {
   Eye,
   RotateCcw,
   Volume2,
-  VolumeOff
+  VolumeOff,
+  AlertCircle
 } from "lucide-react";
 import AuthModal from "./AuthModal";
 
@@ -80,6 +81,7 @@ function App() {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
   const [cooldown, setCooldown] = useState(false);
+  const [chatError, setChatError] = useState("");
 
   const dropdownRef = useRef(null);
   const inputRef = useRef();
@@ -300,7 +302,7 @@ function App() {
 
   const regenerateResponse = async (assistantIndex) => {
     if (isStreaming) return;
-
+    setChatError("");
     const controller = new AbortController();
     controllerRef.current = controller;
 
@@ -403,7 +405,13 @@ function App() {
         speakText(cleanText);
       }
     } catch (error) {
+      if(error.name === "AbortError") return;
       console.error("Regeneration failed:", error);
+      if (!navigator.onLine) {
+        setChatError("You are offline. Check your internet connection.");
+        return;
+      }
+      setChatError("Something went wrong. Please try again.");
     } finally {
       setIsStreaming(false);
       setIsWriting(false);
@@ -498,7 +506,7 @@ function App() {
     if (lastMessageRef.current.toLocaleLowerCase() === message.trim().toLocaleLowerCase()) {
       return;
     }
-
+    setChatError("");
     setAttachedFile(null);
     setAttachedFileText('');
     if (!message.trim() || loading || isStreaming) return;
@@ -637,8 +645,17 @@ function App() {
         },
       );
 
-      if (response.status === 401) {
-        setShowAuthModal(true);
+      if(!response.ok) {
+        if (response.status === 429) {
+          setChatError("Too many requests. Please wait a moment.");
+          return;
+        }
+        if (response.status === 401) {
+          setShowAuthModal(true);
+          return;
+        }
+        setChatError("Failed to generate response.");
+        return;
       }
 
       const reader = response.body.getReader();
@@ -750,11 +767,18 @@ function App() {
       }
       setSelectedImage(null);
 }
-    } catch (err) {
-      console.error("Error:", err);
-      setIsStreaming(false);
+    } catch (error) {
+      if(error.name === "AbortError") return;
+      console.error("Message send failed:", error);
+      if (!navigator.onLine) {
+        setChatError("You are offline. Check your internet connection.");
+        return;
+      }
+      setChatError("Something went wrong. Please try again.");
+      console.error("Error:", error);
     } finally {
       setLoading(false);
+      setIsStreaming(false);
       setTimeout(() => setCooldown(false), 1500);
       setTimeout(() => lastMessageRef.current = "", 5000);
     }
@@ -1135,13 +1159,15 @@ function App() {
                 </>
               ) : (
                 <>
-                  <button onClick={() => {
-                    if(token) {
-                      document.getElementById("file-upload").click()
-                    } else {
-                      setShowAuthModal(true);
-                    }
-                  }}>
+                  <button
+                    onClick={() => {
+                      if (token) {
+                        document.getElementById("file-upload").click();
+                      } else {
+                        setShowAuthModal(true);
+                      }
+                    }}
+                  >
                     Upload Document
                   </button>
 
@@ -1149,7 +1175,9 @@ function App() {
                     Summarize this PDF
                   </button>
 
-                  <button onClick={() => setMessage("What is this document about?")}>
+                  <button
+                    onClick={() => setMessage("What is this document about?")}
+                  >
                     What is this document about?
                   </button>
                 </>
@@ -1163,7 +1191,7 @@ function App() {
                 key={i}
                 className={`message-wrapper ${msg.role === "user" ? "user-wrapper" : "ai-wrapper"}`}
               >
-              {/* {msg.fileName && (
+                {/* {msg.fileName && (
                 <div 
                   className="msg-attached-file clickable" 
                   onClick={() => {
@@ -1183,9 +1211,16 @@ function App() {
                   {msg.fileType?.includes("image") && (
                     <div
                       className="chat-image-wrap"
-                      onClick={() => { setPreviewFile(msg); setShowPreviewModal(true); }}
+                      onClick={() => {
+                        setPreviewFile(msg);
+                        setShowPreviewModal(true);
+                      }}
                     >
-                      <img src={msg.fileUrl} alt={msg.fileName} className="chat-image" />
+                      <img
+                        src={msg.fileUrl}
+                        alt={msg.fileName}
+                        className="chat-image"
+                      />
                       <div className="chat-image-overlay">
                         <Eye size={18} />
                         <span>View full image</span>
@@ -1197,7 +1232,10 @@ function App() {
                   {msg.fileName && !msg.fileType?.includes("image") && (
                     <div
                       className="msg-doc-chip"
-                      onClick={() => { setPreviewFile(msg); setShowPreviewModal(true); }}
+                      onClick={() => {
+                        setPreviewFile(msg);
+                        setShowPreviewModal(true);
+                      }}
                     >
                       <div className="msg-doc-icon">
                         <FileText size={20} color="white" />
@@ -1239,17 +1277,18 @@ function App() {
                   )}
 
                   {/* Regenerate — only for last AI message */}
-                  {msg.role === "assistant" && i === currentChat.messages.length - 1 && (
-                    <button
-                      className="msg-action-btn"
-                      title="Regenerate response"
-                      onClick={() => regenerateResponse(i)}
-                      disabled={loading || isStreaming}
-                    >
-                      <RotateCcw size={12} />
-                      {/* <span>Regenerate</span> */}
-                    </button>
-                  )}
+                  {msg.role === "assistant" &&
+                    i === currentChat.messages.length - 1 && (
+                      <button
+                        className="msg-action-btn"
+                        title="Regenerate response"
+                        onClick={() => regenerateResponse(i)}
+                        disabled={loading || isStreaming}
+                      >
+                        <RotateCcw size={12} />
+                        {/* <span>Regenerate</span> */}
+                      </button>
+                    )}
                 </div>
               </div>
             ))}
@@ -1272,15 +1311,43 @@ function App() {
               </div>
             )}
 
+            {/* ── Error message ── */}
+            {chatError && (
+              <div className="chat-error-wrap">
+                <div className="chat-error">
+                  <div className="chat-error-left">
+                    <AlertCircle size={15} className="chat-error-icon" />
+                    <span>{chatError}</span>
+                  </div>
+                  <div className="chat-error-actions">
+                    <button
+                      className="chat-error-retry"
+                      onClick={() => {
+                        setChatError(null);
+                        sendMessage();
+                      }}
+                    >
+                      <RotateCcw size={12} />
+                      <span>Retry</span>
+                    </button>
+                    <button
+                      className="chat-error-dismiss"
+                      onClick={() => setChatError(null)}
+                      title="Dismiss"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div ref={chatEndRef} />
 
             {!isStreaming && currentChat?.messages.length > 0 && (
               <div className="message-actions">
                 {copiedChat ? (
-                  <button
-                    className="copied-chat-icon"
-                    title="Chat Copied"
-                  >
+                  <button className="copied-chat-icon" title="Chat Copied">
                     <Check size={16} />
                   </button>
                 ) : (
@@ -1326,9 +1393,12 @@ function App() {
                 ) : (
                   <Paperclip size={12} />
                 )}
-                <span 
+                <span
                   className="attached-file-name"
-                  style={{ textDecoration: isUploading ? 'none' : 'underline', cursor: isUploading ? 'default' : 'pointer' }} 
+                  style={{
+                    textDecoration: isUploading ? "none" : "underline",
+                    cursor: isUploading ? "default" : "pointer",
+                  }}
                   onClick={() => {
                     setPreviewFile({
                       fileName: attachedFile,
@@ -1336,7 +1406,7 @@ function App() {
                       fileType: attachedFileType,
                     });
 
-                    if(!isUploading) setShowPreviewModal(true);
+                    if (!isUploading) setShowPreviewModal(true);
                   }}
                 >
                   {isUploading ? `Uploading ${attachedFile}...` : attachedFile}
@@ -1414,21 +1484,19 @@ function App() {
             />
 
             <button
-              className={`voice-toggle-btn ${voiceEnabled ? 'voice-active' : ''}`}
+              className={`voice-toggle-btn ${voiceEnabled ? "voice-active" : ""}`}
               onClick={toggleVoice}
-              title={voiceEnabled ? "Stop Voice Playback" : "Read Response Aloud"}
+              title={
+                voiceEnabled ? "Stop Voice Playback" : "Read Response Aloud"
+              }
             >
-              {voiceEnabled ? (
-                <Volume2 size={18} />
-              ) : (
-                <VolumeOff size={18} />
-              )}
+              {voiceEnabled ? <Volume2 size={18} /> : <VolumeOff size={18} />}
             </button>
 
-            <button 
-              className={`mic-btn ${isListening ? 'mic-recording' : ''}`} 
-              title={isListening ? 'Listening...' : 'Voice input'} 
-              disabled={loading || isUploading} 
+            <button
+              className={`mic-btn ${isListening ? "mic-recording" : ""}`}
+              title={isListening ? "Listening..." : "Voice input"}
+              disabled={loading || isUploading}
               onClick={startListening}
             >
               <Mic size={18} />
@@ -1474,10 +1542,7 @@ function App() {
           className="preview-overlay"
           onClick={() => setShowPreviewModal(false)}
         >
-          <div
-            className="preview-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="preview-modal" onClick={(e) => e.stopPropagation()}>
             <button
               className="close-preview"
               onClick={() => setShowPreviewModal(false)}
