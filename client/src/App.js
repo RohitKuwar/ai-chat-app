@@ -79,6 +79,7 @@ function App() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [cooldown, setCooldown] = useState(false);
 
   const dropdownRef = useRef(null);
   const inputRef = useRef();
@@ -86,6 +87,7 @@ function App() {
   const controllerRef = useRef(null);
   const fullTextRef = useRef("");
   const uploadControllerRef = useRef(null);
+  const lastMessageRef = useRef("");
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -491,7 +493,11 @@ function App() {
   };  
 
   const sendMessage = async () => {
-    if (loading || isUploading) return;
+    if (loading || isUploading || cooldown) return;
+
+    if (lastMessageRef.current.toLocaleLowerCase() === message.trim().toLocaleLowerCase()) {
+      return;
+    }
 
     setAttachedFile(null);
     setAttachedFileText('');
@@ -611,6 +617,8 @@ function App() {
         ),
       );
 
+      lastMessageRef.current = message.trim().toLocaleLowerCase();
+
       /* 🔥 STEP 2: Chat API */
       const response = await fetch(
         `${process.env.REACT_APP_API_URL}/api/ai/chat`,
@@ -648,6 +656,7 @@ function App() {
       );
 
       setIsStreaming(true);
+      setCooldown(true);
       fullTextRef.current = "";
 
       while (true) {
@@ -746,6 +755,8 @@ function App() {
       setIsStreaming(false);
     } finally {
       setLoading(false);
+      setTimeout(() => setCooldown(false), 1500);
+      setTimeout(() => lastMessageRef.current = "", 5000);
     }
   };
 
@@ -1435,7 +1446,7 @@ function App() {
             ) : (
               <button
                 onClick={sendMessage}
-                disabled={loading || isUploading}
+                disabled={loading || isUploading || cooldown}
                 className="send-btn"
                 title="send message"
               >
