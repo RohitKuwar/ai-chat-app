@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/save", authMiddleware, saveChat);
 router.get("/", authMiddleware, getChats);
 router.put("/update", authMiddleware, updateChat);
-router.delete("/:chatId", authMiddleware, deleteChat);
+router.delete("/delete/:chatId", authMiddleware, deleteChat);
 router.put("/rename", authMiddleware, renameChat);
 router.put("/pin/:chatId", authMiddleware, pinChat);
 

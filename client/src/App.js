@@ -792,9 +792,11 @@ function App() {
     }
 
     if (!token) return;
-    setDeletingId(chatId);
+    
+    try {
+      setDeletingId(chatId);
     await axios.delete(
-      `${process.env.REACT_APP_API_URL}/api/chat/${chatId}`,
+      `${process.env.REACT_APP_API_URL}/api/chat/delete/${chatId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -807,6 +809,11 @@ function App() {
 
     if (currentChatId === chatId) {
       setCurrentChatId(null);
+    }
+    } catch (err) {
+      console.error("Delete failed:", err);
+    } finally {
+      setDeletingId(null);
     }
   };
 
