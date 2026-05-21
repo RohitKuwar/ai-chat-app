@@ -16,6 +16,10 @@ const chatSchema = new mongoose.Schema(
       type: String,
       default: "New Chat",
     },
+    isPinned: {
+      type: Boolean,
+      default: false,
+    },
     messages: [messageSchema],
     embeddings: [
     {
@@ -24,7 +28,7 @@ const chatSchema = new mongoose.Schema(
     },
   ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Chat = mongoose.model("Chat", chatSchema);

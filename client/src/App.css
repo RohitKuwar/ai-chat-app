@@ -230,6 +230,8 @@ body {
   color: #fff;
   padding: 2px;
   transition: opacity 140ms, color 140ms;
+  background: none;
+  border: none;
 }
 
 .sb-delete-btn {
@@ -237,6 +239,8 @@ body {
   color: #5e5e5e;
   padding: 2px;
   transition: opacity 140ms, color 140ms;
+  background: none;
+  border: none;
 }
 .sb-chat-item:hover .sb-chat-actions { opacity: 1; }
 .sb-delete-btn:hover { color: #f87171; }

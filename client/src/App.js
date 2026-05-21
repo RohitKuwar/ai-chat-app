@@ -439,6 +439,7 @@ function App() {
         id: chat._id,
         title: chat.title,
         messages: chat.messages,
+        isPinned: chat.isPinned,
       }));
 
       setChats(formattedChats);
@@ -832,6 +833,35 @@ function App() {
     );
   };
 
+  const pinChat = async (chatId) => {
+    try {
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/chat/pin/${chatId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      const data = await res.json();
+
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === chatId
+            ? {
+                ...chat,
+                isPinned: data.isPinned,
+              }
+            : chat,
+        ),
+      );
+    } catch (error) {
+      console.error("Pin failed:", error);
+    }
+  };
+
   const stopGeneration = () => {
     if (controllerRef.current) {
       controllerRef.current.abort();
@@ -1007,6 +1037,7 @@ function App() {
           setCurrentChatId={setCurrentChatId}
           deleteChat={deleteChat}
           renameChat={renameChat}
+          pinChat={pinChat}
           setIsCreateNewChat={setIsCreateNewChat}
           highlightText={highlightText}
           setShowAuthModal={setShowAuthModal}
@@ -1083,6 +1114,7 @@ function App() {
               setCurrentChatId={setCurrentChatId}
               deleteChat={deleteChat}
               renameChat={renameChat}
+              pinChat={pinChat}
               setIsCreateNewChat={setIsCreateNewChat}
               highlightText={highlightText}
               setShowAuthModal={setShowAuthModal}
