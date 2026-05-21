@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { PanelLeft, Plus, MessageSquare, Trash2, Search, X, Pencil, User, Loader2 } from 'lucide-react'
+import { PanelLeft, Plus, MessageSquare, Trash2, Search, X, Pencil, User, Loader2, Pin, PinOff } from 'lucide-react'
 import { getInitials } from './Utils/getInitials';
 
-function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chats, currentChatId, setCurrentChatId, deleteChat, renameChat, setIsCreateNewChat, highlightText, setShowAuthModal, token, user, chatsLoading, deletingId, setAttachedFile, setAttachedFileText, setIsUploading }) {
+function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chats, currentChatId, setCurrentChatId, deleteChat, renameChat, pinChat, setIsCreateNewChat, highlightText, setShowAuthModal, token, user, chatsLoading, deletingId, setAttachedFile, setAttachedFileText, setIsUploading }) {
 
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
@@ -139,7 +139,7 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
           chats.length === 0 ? (
             <div className="sb-no-chats">No chats found</div>
           ) : (
-            chats.map((chat) => (
+            chats?.sort((a, b) => b.isPinned - a.isPinned)?.map((chat) => (
               <div
                 key={chat.id}
                 className={`chat-item ${chat.id === currentChatId ? "active" : ""}`}
@@ -183,8 +183,19 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
                   {chat.messages.length > 0 && (
                     <div className="sb-chat-actions">
                       {token && (
-                        <Pencil
-                          size={14}
+                        <button
+                          className="sb-rename-btn"
+                          title={`${chat.isPinned ? "Unpin chat" : "Pin chat"}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            pinChat(chat.id);
+                          }}
+                        >
+                          {chat.isPinned ? <PinOff size={14} fill='#ddd' /> : <Pin size={14} />}
+                        </button>
+                      )}
+                      {token && (
+                        <button
                           className="sb-rename-btn"
                           title="Rename"
                           onClick={(e) => {
@@ -192,21 +203,24 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
                             setEditingId(chat.id);
                             setEditTitle(chat.title);
                           }}
-                        />
+                        >
+                          <Pencil size={14} />
+                        </button>
                       )}
                       {
                         deletingId === chat.id ? (
                           <Loader2 size={13} className="sb-deleting-icon" />
                         ) : (
-                          <Trash2
-                            size={14}
+                          <button
                             className="sb-delete-btn"
                             title="Delete"
                             onClick={(e) => {
                               e.stopPropagation();
                               deleteChat(chat.id);
                             }}
-                          />
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         )
                       }
                     </div>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, MessageSquare, Trash2, Search, X, Pencil, Loader2 } from 'lucide-react'
+import { Plus, MessageSquare, Trash2, Search, X, Pencil, Loader2, PinOff, Pin } from 'lucide-react'
 import { getInitials } from './Utils/getInitials';
 
-function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, setSearch, createNewChat, chats, currentChatId, renameChat, deleteChat, setCurrentChatId, setIsCreateNewChat, highlightText, setShowAuthModal, token, user, chatsLoading, deletingId, setAttachedFile, setAttachedFileText, setIsUploading }) {
+function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, setSearch, createNewChat, chats, currentChatId, pinChat, renameChat, deleteChat, setCurrentChatId, setIsCreateNewChat, highlightText, setShowAuthModal, token, user, chatsLoading, deletingId, setAttachedFile, setAttachedFileText, setIsUploading }) {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
 
@@ -95,6 +95,18 @@ function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, se
                   )}
                   {chat.messages.length > 0 && (
                     <div className="sb-chat-actions">
+                      {token && (
+                        <button
+                          className="sb-rename-btn"
+                          title={`${chat.isPinned ? "Unpin chat" : "Pin chat"}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            pinChat(chat.id);
+                          }}
+                        >
+                          {chat.isPinned ? <PinOff size={14} fill='#ddd' /> : <Pin size={14} />}
+                        </button>
+                      )}
                       {token && (
                         <Pencil
                           size={14}

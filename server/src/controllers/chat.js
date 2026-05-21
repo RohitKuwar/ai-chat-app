@@ -23,7 +23,6 @@ export const saveChat = async (req, res) => {
       message: "Chat saved",
       chat,
     });
-
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -43,20 +42,19 @@ export const getChats = async (req, res) => {
     const chats = await Chat.find({ userId }).sort({ updatedAt: -1 });
 
     res.status(200).json({ chats });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   } finally {
-      const duration = Date.now() - startTime;
-  
-      logEvent({
-        type: "REQUEST_COMPLETE",
-        message: "AI request completed",
-        data: {
-          duration,
-        },
-      });
-    }
+    const duration = Date.now() - startTime;
+
+    logEvent({
+      type: "REQUEST_COMPLETE",
+      message: "AI request completed",
+      data: {
+        duration,
+      },
+    });
+  }
 };
 
 export const updateChat = async (req, res) => {
@@ -84,7 +82,6 @@ export const updateChat = async (req, res) => {
       message: "Chat updated",
       chat,
     });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -109,7 +106,6 @@ export const deleteChat = async (req, res) => {
     }
 
     res.status(200).json({ message: "Chat deleted" });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -127,7 +123,7 @@ export const renameChat = async (req, res) => {
     const chat = await Chat.findOneAndUpdate(
       { _id: chatId, userId },
       { title },
-      { new: true }
+      { new: true },
     );
 
     if (!chat) {
@@ -135,8 +131,34 @@ export const renameChat = async (req, res) => {
     }
 
     res.status(200).json({ chat });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const pinChat = async (req, res) => {
+  try {
+    const chat = await Chat.findById(req.params.chatId);
+
+    if (!chat) {
+      return res.status(404).json({
+        message: "Chat not found",
+      });
+    }
+
+    chat.isPinned = !chat.isPinned;
+
+    await chat.save();
+
+    res.status(200).json({
+      success: true,
+      isPinned: chat.isPinned,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Failed to update pin state",
+    });
   }
 };
