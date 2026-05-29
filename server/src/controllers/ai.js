@@ -217,18 +217,8 @@ export const chat = async (req, res) => {
       hasContext = topChunks.length > 0;
     }
 
-    /* 🧠 SYSTEM PROMPT BASED ON MODE */
+    /* 🧠 SYSTEM PROMPT */
     let systemPrompt = hasContext ? AGENT_RAG_PROMPT : AGENT_SYSTEM_PROMPT;
-
-    if (mode === "code") {
-      systemPrompt =
-        "You are a senior developer. Generate clean code, optimize it, and explain it step-by-step using markdown.";
-    }
-
-    if (mode === "blog") {
-      systemPrompt =
-        "Write a detailed blog with headings, examples, and a catchy title in markdown.";
-    }
 
     const finalSystemPrompt = hasContext ? systemPrompt + "\n\nContext:\n" + context : systemPrompt;
 

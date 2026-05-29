@@ -8,10 +8,7 @@ import CodeBlock from "./CodeBlock";
 import "./App.css";
 import {
   Send,
-  MessageSquare,
-  Code,
   FileText,
-  ChevronDown,
   CirclePause,
   Menu,
   X,
@@ -24,8 +21,8 @@ import {
   Eye,
   RotateCcw,
   Volume2,
-  VolumeOff,
-  AlertCircle
+  VolumeX,
+  AlertCircle,
 } from "lucide-react";
 import AuthModal from "./AuthModal";
 
@@ -48,8 +45,6 @@ function App() {
   const [currentChatId, setCurrentChatId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isWriting, setIsWriting] = useState(false);
-  const [mode, setMode] = useState("chat");
-  const [open, setOpen] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobSidebarOpen, setMobSidebarOpen] = useState(false);
@@ -77,13 +72,11 @@ function App() {
   const [previewFile, setPreviewFile] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [speakingMessageId, setSpeakingMessageId] = useState(null);
   const [cooldown, setCooldown] = useState(false);
   const [chatError, setChatError] = useState("");
 
-  const dropdownRef = useRef(null);
   const inputRef = useRef();
   const chatEndRef = useRef(null);
   const controllerRef = useRef(null);
@@ -108,39 +101,17 @@ function App() {
 
   const currentChat = chats.find((c) => c.id === currentChatId);
 
+  useEffect(() => {
+    return () => {
+      speechSynthesis.cancel();
+    };
+  }, []);
+
   // MOBILE
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === "Escape") {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener("keydown", handleKey);
-
-    return () => {
-      document.removeEventListener("keydown", handleKey);
-    };
   }, []);
 
   useEffect(() => {
@@ -208,11 +179,6 @@ function App() {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 50);
   }, [currentChat]);
-
-  const selectMode = (value) => {
-    setMode(value);
-    setOpen(false);
-  };
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -301,6 +267,7 @@ function App() {
   };
 
   const regenerateResponse = async (assistantIndex) => {
+    stopSpeaking();
     if (isStreaming) return;
     setChatError("");
     const controller = new AbortController();
@@ -350,7 +317,6 @@ function App() {
           },
           body: JSON.stringify({
             messages: updatedMessages.slice(0, -1), // remove empty placeholder
-            mode,
             chatId: currentChatId,
           }),
           signal: controller.signal,
@@ -391,18 +357,6 @@ function App() {
             };
           }),
         );
-      }
-
-      // 🔥 Optional speech
-      if (voiceEnabled) {
-        const cleanTextForSpeech = (text) =>
-          text
-            .replace(/```[\s\S]*?```/g, "")
-            .replace(/[#*_>`-]/g, "")
-            .trim();
-        const cleanText = cleanTextForSpeech(fullTextRef.current);
-
-        speakText(cleanText);
       }
     } catch (error) {
       if(error.name === "AbortError") return;
@@ -502,6 +456,7 @@ function App() {
   };  
 
   const sendMessage = async () => {
+    stopSpeaking();
     if (loading || isUploading || cooldown) return;
 
     if (lastMessageRef.current.toLocaleLowerCase() === message.trim().toLocaleLowerCase()) {
@@ -639,7 +594,6 @@ function App() {
           },
           body: JSON.stringify({
             messages: updatedMessages,
-            mode,
             chatId: chatId
           }),
           signal: controller.signal,
@@ -700,11 +654,6 @@ function App() {
         );
       }
 
-      const cleanTextForSpeech = text => text.replace(/```[\s\S]*?```/g, "").replace(/[#*_>`-]/g, "").trim();
-
-      if(voiceEnabled) {
-        speakText(cleanTextForSpeech(fullTextRef.current));
-      }
       setIsStreaming(false);
       setIsWriting(false);
 
@@ -1007,25 +956,38 @@ function App() {
     recognition.start();
   };
 
-  const speakText = (text) => {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    
-    utterance.lang = "en-US";
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
+  const cleanTextForSpeech = (text) => {
+  return text
+    .replace(/```[\s\S]*?```/g, "") // remove code blocks
+    .replace(/`([^`]+)`/g, "$1")    // remove inline code
+    .replace(/[#*_>~-]/g, "")       // remove markdown symbols
+    .replace(/\[(.*?)\]\(.*?\)/g, "$1") // markdown links
+    .replace(/\n+/g, " ")           // newlines → spaces
+    .replace(/\s+/g, " ")           // extra spaces
+    .trim();
+};
+
+  const stopSpeaking = () => {
+    speechSynthesis.cancel();
+    setSpeakingMessageId(null);
   };
 
-  const toggleVoice = () => {
-    if (voiceEnabled) {
-      window.speechSynthesis.pause();
-    } else {
-      if(window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
+  const toggleSpeech = (messageId, text) => {
+    // same message clicked again
+    if (speakingMessageId === messageId) {
+      stopSpeaking();
+      return;
     }
-    setVoiceEnabled((prev) => !prev);
+
+    // stop currently speaking message
+    speechSynthesis.cancel();
+    const cleanedText = cleanTextForSpeech(text);
+    const utterance = new SpeechSynthesisUtterance(cleanedText);
+    utterance.onend = () => {
+      setSpeakingMessageId(null);
+    };
+    setSpeakingMessageId(messageId);
+    speechSynthesis.speak(utterance);
   };
 
   return (
@@ -1328,6 +1290,16 @@ function App() {
                         {/* <span>Regenerate</span> */}
                       </button>
                     )}
+
+                    {msg.role === "assistant" && (
+                      <button
+                        className={`msg-action-btn ${speakingMessageId === msg._id ? "voice-active" : ""}`}
+                        onClick={() => toggleSpeech(msg._id, msg.content)}
+                        title={speakingMessageId === msg._id ? "Stop Reading" : "Read Aloud"}
+                      >
+                        {speakingMessageId === msg._id ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                      </button>
+                    )}
                 </div>
               </div>
             ))}
@@ -1462,32 +1434,6 @@ function App() {
           )}
 
           <div className="input-bar">
-            {/* Mode Dropdown */}
-            <div className="mode-dropdown" ref={dropdownRef}>
-              <div className="mode-selected" onClick={() => setOpen(!open)}>
-                {mode === "chat" && <MessageSquare size={16} />}
-                {mode === "code" && <Code size={16} />}
-                {mode === "blog" && <FileText size={16} />}
-
-                <span>{mode}</span>
-                <ChevronDown size={14} />
-              </div>
-
-              {open && (
-                <div className="dropdown-menu">
-                  <div onClick={() => selectMode("chat")}>
-                    <MessageSquare size={16} /> Chat
-                  </div>
-                  <div onClick={() => selectMode("code")}>
-                    <Code size={16} /> Code
-                  </div>
-                  <div onClick={() => selectMode("blog")}>
-                    <FileText size={16} /> Blog
-                  </div>
-                </div>
-              )}
-            </div>
-
             <input
               type="file"
               id="file-upload"
@@ -1521,16 +1467,6 @@ function App() {
                 }
               }}
             />
-
-            <button
-              className={`voice-toggle-btn ${voiceEnabled ? "voice-active" : ""}`}
-              onClick={toggleVoice}
-              title={
-                voiceEnabled ? "Stop Voice Playback" : "Read Response Aloud"
-              }
-            >
-              {voiceEnabled ? <Volume2 size={18} /> : <VolumeOff size={18} />}
-            </button>
 
             <button
               className={`mic-btn ${isListening ? "mic-recording" : ""}`}
