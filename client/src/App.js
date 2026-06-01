@@ -1136,29 +1136,7 @@ function App() {
             {/* <div style={{ display: "flex", gap: "10px", alignItems: "center" }}> */}
             <span>AI Chat Studio</span>
 
-            {isAuthenticated ? (
-              <div className="profile-container">
-                <CircleUserRound
-                  size={18}
-                  className="profile-icon"
-                  onClick={() => setShowUserDropdown((prev) => !prev)}
-                />
-
-                {showUserDropdown && (
-                  <div className="profile-dropdown">
-                    <div className="profile-name">{user?.name || "User"}</div>
-                    <div className="profile-name" onClick={() => {
-                      stopSpeaking(); 
-                      setShowSettings(true);
-                      setShowUserDropdown(false);
-                    }}>Settings</div>
-                    <div className="profile-logout" onClick={handleLogout}>
-                      Logout
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
+            {!token && (
               <button
                 onClick={() => setShowAuthModal(true)}
                 className="auth-btn"
@@ -1166,7 +1144,6 @@ function App() {
                 Login
               </button>
             )}
-            {/* </div> */}
           </div>
         )}
 
@@ -1210,31 +1187,7 @@ function App() {
 
         {!isMobile && (
           <div style={{ position: "absolute", top: "10px", right: "10px" }}>
-            {isAuthenticated ? (
-              <div className="profile-container">
-                <CircleUserRound
-                  size={22}
-                  className="profile-icon"
-                  onClick={() => setShowUserDropdown((prev) => !prev)}
-                />
-
-                {showUserDropdown && (
-                  <div className="profile-dropdown">
-                    <div className="profile-name">{user?.name || "User"}</div>
-
-                    <div className="profile-name" onClick={() => {
-                      stopSpeaking(); 
-                      setShowSettings(true);
-                      setShowUserDropdown(false);
-                    }}>Settings</div>
-
-                    <div className="profile-logout" onClick={handleLogout}>
-                      Logout
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
+            {!token && (
               <button
                 onClick={() => setShowAuthModal(true)}
                 className="auth-btn"
