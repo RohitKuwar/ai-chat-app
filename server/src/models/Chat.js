@@ -3,6 +3,26 @@ import mongoose from "mongoose";
 const messageSchema = new mongoose.Schema({
   role: String,
   content: String,
+
+  fileName: {
+    type: String,
+    default: null,
+  },
+
+  fileUrl: {
+    type: String,
+    default: null,
+  },
+
+  fileType: {
+    type: String,
+    default: null,
+  },
+
+  imageUrl: {
+    type: String,
+    default: null,
+  },
 });
 
 const chatSchema = new mongoose.Schema(

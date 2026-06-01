@@ -691,6 +691,11 @@ function App() {
         },
       );
 
+      setAttachedFile(null);
+      setAttachedFileText('');
+      setAttachedFileUrl("");
+      setAttachedFileType("");
+
       if(!response.ok) {
         if (response.status === 429) {
           setChatError("Too many requests. Please wait a moment.");
