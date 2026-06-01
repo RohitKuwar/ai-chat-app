@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Plus, MessageSquare, Trash2, Search, X, Pencil, Loader2, PinOff, Pin } from 'lucide-react'
+import { Plus, MessageSquare, Trash2, Search, X, Pencil, Loader2, PinOff, Pin, Settings, LogOut } from 'lucide-react'
 import { getInitials } from './Utils/getInitials';
 
-function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, setSearch, createNewChat, chats, currentChatId, pinChat, renameChat, deleteChat, setCurrentChatId, setIsCreateNewChat, highlightText, setShowAuthModal, token, user, chatsLoading, deletingId, setAttachedFile, setAttachedFileText, setIsUploading }) {
+function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, setSearch, createNewChat, chats, currentChatId, pinChat, renameChat, deleteChat, setCurrentChatId, setIsCreateNewChat, highlightText, setShowAuthModal, token, user, chatsLoading, deletingId, setAttachedFile, setAttachedFileText, setIsUploading, stopSpeaking, onSettingsOpen, handleLogout }) {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const handleSaveEdit = (chatId) => {
     if (!editTitle.trim()) {
@@ -43,7 +44,7 @@ function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, se
           )}
         </div>
 
-        <nav className="sb-nav">
+        <nav className="sb-nav" onClick={(e) => e.stopPropagation()}>
           {chatsLoading ? (
             token && (<div className="sb-loader">
               <Loader2 size={16} className="sb-loader-icon" />
@@ -53,11 +54,12 @@ function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, se
             chats.length === 0 ? (
               <div className="sb-no-chats">No chats found</div>
             ) : (
-              chats.map(chat => (
+              chats?.sort((a, b) => b.isPinned - a.isPinned)?.map(chat => (
           <div
             key={chat.id}
             className={`chat-item ${chat.id === currentChatId ? "active" : ""}`}
             onClick={() => {
+              stopSpeaking();
               setIsCreateNewChat(false);
               setCurrentChatId(chat.id);
               setMobSidebarOpen(false);
@@ -65,6 +67,7 @@ function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, se
               setAttachedFile(null);
               setAttachedFileText("");
               setIsUploading(false);
+              setUserMenuOpen(false);
             }}
             title={chat.title}
           >
@@ -143,8 +146,46 @@ function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, se
           }
         </nav>
 
+      {
+        token && (
+          <div>
+            {
+              userMenuOpen && (
+                <div className="sb-user-menu">
+                  <button
+                  className="sb-context-item" 
+                  onClick={() => { 
+                    stopSpeaking();
+                    setUserMenuOpen(false); 
+                    onSettingsOpen(); 
+                  }}
+                >
+                  <Settings size={14} />
+                  <span>Settings</span>
+                </button>
+                <div className="sb-context-divider" />
+                <button
+                  className="sb-context-item sb-context-delete"
+                  onClick={() => { 
+                    setUserMenuOpen(false); 
+                    handleLogout(); 
+                  }}
+                >
+                  <LogOut size={14} />
+                  <span>Log out</span>
+                </button>
+                </div>
+              )
+            }
+          </div>
+        )
+      }
+
       {/* ── Footer ── */}
-      <div className="mob-sb-footer" style={{ marginTop: "auto" }}>
+      <div className="mob-sb-footer" style={{ marginTop: "auto" }} onClick={(e) => {
+        e.stopPropagation(); 
+        setUserMenuOpen(prev => !prev);
+      }}>
         {token ? (
           <div className="sb-footer-user">
             <span className="sb-footer-avatar">

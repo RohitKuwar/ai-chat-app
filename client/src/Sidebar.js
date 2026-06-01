@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { PanelLeft, Plus, MessageSquare, Trash2, Search, X, Pencil, User, Loader2, Pin, PinOff } from 'lucide-react'
+import { PanelLeft, Plus, MessageSquare, Trash2, Search, X, Pencil, User, Loader2, Pin, PinOff, Settings, LogOut } from 'lucide-react'
 import { getInitials } from './Utils/getInitials';
 
-function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chats, currentChatId, setCurrentChatId, deleteChat, renameChat, pinChat, setIsCreateNewChat, highlightText, setShowAuthModal, token, user, chatsLoading, deletingId, setAttachedFile, setAttachedFileText, setIsUploading }) {
+function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chats, currentChatId, setCurrentChatId, deleteChat, renameChat, pinChat, setIsCreateNewChat, highlightText, setShowAuthModal, token, user, chatsLoading, deletingId, setAttachedFile, setAttachedFileText, setIsUploading, stopSpeaking, onSettingsOpen, handleLogout }) {
 
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const searchRef = useRef(null);
 
   useEffect(() => {
@@ -149,6 +150,7 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
                   setAttachedFile(null);
                   setAttachedFileText("");
                   setIsUploading(false);
+                  setUserMenuOpen(false);
                 }}
                 title={chat.title}
               >
@@ -157,6 +159,7 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
                   className={`sb-chat-item ${currentChatId === chat.id ? "sb-chat-active" : ""}`}
                   // onClick={() => setActiveId(chat.id)}
                   onClick={() => {
+                    stopSpeaking();
                     setCurrentChatId(chat.id);
                     setIsCreateNewChat(false);
                   }}
@@ -232,8 +235,43 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
         </nav>
       )}
 
+      {
+        token && (
+          <div>
+            {
+              userMenuOpen && (
+                <div className="sb-user-menu">
+                  <button
+                  className="sb-context-item"
+                  onClick={() => { 
+                    stopSpeaking();
+                    setUserMenuOpen(false); 
+                    onSettingsOpen(); 
+                  }}
+                >
+                  <Settings size={14} />
+                  <span>Settings</span>
+                </button>
+                <div className="sb-context-divider" />
+                <button
+                  className="sb-context-item sb-context-delete"
+                  onClick={() => { 
+                    setUserMenuOpen(false); 
+                    handleLogout(); 
+                  }}
+                >
+                  <LogOut size={14} />
+                  <span>Log out</span>
+                </button>
+                </div>
+              )
+            }
+          </div>
+        )
+      }
+
       {/* ── Footer ── */}
-      <div className={`sb-footer ${!sidebarOpen ? "sb-footer-center" : ""}`}>
+      <div className={`sb-footer ${!sidebarOpen ? "sb-footer-center" : ""}`} onClick={() => setUserMenuOpen(prev => !prev)}>
         {sidebarOpen && (
           <div style={{ color: "white" }}>
             {token ? (
@@ -254,14 +292,6 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
                 </button>
               </div>
             )}
-            {/* <button className="sb-footer-item">
-              <User size={15} />
-              <span>John Doe</span>
-            </button> */}
-            {/* <button className="sb-footer-item">
-              <Settings size={15} />
-              <span>Settings</span>
-            </button> */}
           </div>
         )}
       </div>

@@ -25,6 +25,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import AuthModal from "./AuthModal";
+import Settings from "./Settings";
 
 const convertToBase64 = (file) => {
   return new Promise((resolve, reject) => {
@@ -74,8 +75,17 @@ function App() {
   const [isListening, setIsListening] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [speakingMessageId, setSpeakingMessageId] = useState(null);
+  const [voices, setVoices] = useState([]);
+  const [selectedVoice, setSelectedVoice] = useState(null);
   const [cooldown, setCooldown] = useState(false);
   const [chatError, setChatError] = useState("");
+  const [showSettings, setShowSettings] = useState(false);
+  const [settings, setSettings] = useState({
+    voiceURI: "",
+    theme: "",
+    model: "",
+    temperature: 0,
+  });
 
   const inputRef = useRef();
   const chatEndRef = useRef(null);
@@ -100,6 +110,42 @@ function App() {
   ];
 
   const currentChat = chats.find((c) => c.id === currentChatId);
+
+  useEffect(() => {
+    const loadVoices = () => {
+      const availableVoices = speechSynthesis.getVoices();
+      setVoices(availableVoices);
+    };
+
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+
+    return () => {
+      speechSynthesis.onvoiceschanged = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!voices.length) return;
+
+    const savedVoice = voices.find((voice) => voice.voiceURI === settings.voiceURI);
+
+    if (savedVoice) {
+      setSelectedVoice(savedVoice);
+    } else {
+      const defaultVoice = voices.find((voice) => voice.default);
+
+      setSelectedVoice(defaultVoice || voices[0]);
+    }
+  }, [voices, settings.voiceURI]);
+
+  useEffect(() => {
+    if (token) {
+      fetchSettings();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   useEffect(() => {
     return () => {
@@ -266,6 +312,49 @@ function App() {
     }, 1500);
   };
 
+  const fetchSettings = async () => {
+    if (!token) return;
+
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/settings`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setSettings(res.data.settings);
+    } catch (error) {
+      console.error("Failed to load settings:", error);
+    }
+  };
+
+  const handleVoiceChange = async (voiceURI) => {
+    const voice = voices.find((v) => v.voiceURI === voiceURI);
+
+    setSelectedVoice(voice);
+
+    try {
+      const res = await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/settings`,
+        {
+          voiceURI,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      setSettings(res.data.settings);
+    } catch (error) {
+      console.error('Failed to save voice:', error);
+    }
+  };
+
   const regenerateResponse = async (assistantIndex) => {
     stopSpeaking();
     if (isStreaming) return;
@@ -406,6 +495,7 @@ function App() {
   };
 
   const handleLogout = () => {
+    stopSpeaking();
     localStorage.clear(); 
     setToken(null); 
     setUser(null); 
@@ -416,6 +506,7 @@ function App() {
   };
 
   const createNewChat = () => {
+    stopSpeaking();
     // const newChat = {
     //   id: "chat_" + Date.now(),
     //   title: "New Chat",
@@ -735,6 +826,9 @@ function App() {
   };
 
   const deleteChat = async (chatId) => {
+    if (currentChatId === chatId) {
+      stopSpeaking();
+    }
     if (chatId.startsWith("chat_")) {
       setChats(prev => prev.filter(c => c.id !== chatId));
       return;
@@ -983,6 +1077,12 @@ function App() {
     speechSynthesis.cancel();
     const cleanedText = cleanTextForSpeech(text);
     const utterance = new SpeechSynthesisUtterance(cleanedText);
+    // const voices = speechSynthesis.getVoices();
+    // const preferredVoice = voices.find(v => v.name.includes("Google 日本語"));
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
     utterance.onend = () => {
       setSpeakingMessageId(null);
     };
@@ -1017,6 +1117,9 @@ function App() {
           setAttachedFile={setAttachedFile}
           setAttachedFileText={setAttachedFileText}
           setIsUploading={setIsUploading}
+          stopSpeaking={stopSpeaking}
+          onSettingsOpen={() => setShowSettings(true)}
+          handleLogout={handleLogout}
         />
       </div>
       <div
@@ -1044,7 +1147,11 @@ function App() {
                 {showUserDropdown && (
                   <div className="profile-dropdown">
                     <div className="profile-name">{user?.name || "User"}</div>
-
+                    <div className="profile-name" onClick={() => {
+                      stopSpeaking(); 
+                      setShowSettings(true);
+                      setShowUserDropdown(false);
+                    }}>Settings</div>
                     <div className="profile-logout" onClick={handleLogout}>
                       Logout
                     </div>
@@ -1094,6 +1201,9 @@ function App() {
               setAttachedFile={setAttachedFile}
               setAttachedFileText={setAttachedFileText}
               setIsUploading={setIsUploading}
+              stopSpeaking={stopSpeaking}
+              onSettingsOpen={() => setShowSettings(true)}
+              handleLogout={handleLogout}
             />
           </div>
         )}
@@ -1111,6 +1221,12 @@ function App() {
                 {showUserDropdown && (
                   <div className="profile-dropdown">
                     <div className="profile-name">{user?.name || "User"}</div>
+
+                    <div className="profile-name" onClick={() => {
+                      stopSpeaking(); 
+                      setShowSettings(true);
+                      setShowUserDropdown(false);
+                    }}>Settings</div>
 
                     <div className="profile-logout" onClick={handleLogout}>
                       Logout
@@ -1192,18 +1308,6 @@ function App() {
                 key={i}
                 className={`message-wrapper ${msg.role === "user" ? "user-wrapper" : "ai-wrapper"}`}
               >
-                {/* {msg.fileName && (
-                <div 
-                  className="msg-attached-file clickable" 
-                  onClick={() => {
-                    setPreviewFile(msg);
-                    setShowPreviewModal(true);
-                  }}
-                >
-                  <Paperclip size={12} />
-                  <span>{msg.fileName}</span>
-                </div>
-              )} */}
                 <div
                   // key={i}
                   className={`message ${msg.role === "user" ? "user" : "ai"}`}
@@ -1544,6 +1648,20 @@ function App() {
             )}
           </div>
         </div>
+      )}
+
+      {/* ── Settings Modal ── */}
+      {showSettings && (
+        <Settings
+            onClose={() => setShowSettings(false)}
+            token={token}
+            settings={settings}
+            setSettings={setSettings}
+            voices={voices}
+            selectedVoice={selectedVoice}
+            setSelectedVoice={setSelectedVoice}
+            handleVoiceChange={handleVoiceChange}
+        />
       )}
     </div>
   );
