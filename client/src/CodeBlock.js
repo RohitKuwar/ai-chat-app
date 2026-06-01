@@ -1,56 +1,43 @@
+// CodeBlock.js
 import { useState } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { nightOwl } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, CodeXml } from "lucide-react";
 
-const CodeBlock = ({ inline, className, children }) => {
-  const match = /language-(\w+)/.exec(className || "");
-  const language = match ? match[1] : "text";
-  const code = String(children).replace(/\n$/, "");
-
+function CodeBlock({ node, inline, className, children, ...props }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(code);
+    navigator.clipboard.writeText(String(children));
     setCopied(true);
-
-    setTimeout(() => {
-      setCopied(false);
-    }, 1500);
+    setTimeout(() => setCopied(false), 2000);
   };
 
+  // ── Inline code (single backtick) ──
   if (inline) {
-    return <code>{children}</code>;
+    return (
+      <code className="inline-code" {...props}>
+        {children}
+      </code>
+    );
   }
+
+  // ── Block code (triple backtick) ──
+  const language = className?.replace("language-", "") || "text";
 
   return (
     <div className="code-block">
       <div className="code-header">
-        <span className="lang">{language}</span>
-
-        <button onClick={handleCopy} className="copy-btn">
-          {copied ? (
-            <Check size={16} strokeWidth={2.5} />
-          ) : (
-            <Copy size={16} strokeWidth={2} />
-          )}
+        <span className="lang"><CodeXml size={14} color={"#6366f1"} /> <span>{language}</span></span>
+        <button className="copy-btn" onClick={handleCopy} title="Copy code">
+          {copied ? <Check size={14} /> : <Copy size={14} />}
         </button>
       </div>
-
-      <SyntaxHighlighter
-        style={nightOwl}
-        language={language}
-        PreTag="div"
-        customStyle={{
-          background: "transparent",
-          margin: 0,
-          padding: "12px",
-        }}
-      >
-        {code}
-      </SyntaxHighlighter>
+      <pre className="code-pre">
+        <code className={className} {...props}>
+          {children}
+        </code>
+      </pre>
     </div>
   );
-};
+}
 
 export default CodeBlock;

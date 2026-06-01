@@ -152,9 +152,9 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
         </button> */}
 
         <p>
-          {isLogin ? "New user?" : "Already have account?"}
+          {isLogin ? "New user? " : "Already have account? "}
           <span onClick={() => setIsLogin(!isLogin)} style={{ textDecoration: "underline", cursor: "pointer" }}>
-            {isLogin ? " Signup" : " Login"}
+            {isLogin ? "Signup" : "Login"}
           </span>
         </p>
 
