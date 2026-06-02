@@ -8,6 +8,21 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
   const [editTitle, setEditTitle] = useState('');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const searchRef = useRef(null);
+  const userMenuRef = useRef(null);
+  const footerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        userMenuRef.current && !userMenuRef.current.contains(e.target) &&
+        footerRef.current && !footerRef.current.contains(e.target)
+      ) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const handleKey = (e) => {
@@ -240,7 +255,7 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
           <div>
             {
               userMenuOpen && (
-                <div className="sb-user-menu">
+                <div className="sb-user-menu" ref={userMenuRef}>
                   <button
                   className="sb-context-item"
                   onClick={() => { 
@@ -271,9 +286,9 @@ function Sidebar({ sidebarOpen, onToggle, createNewChat, search, setSearch, chat
       }
 
       {/* ── Footer ── */}
-      <div className={`sb-footer ${!sidebarOpen ? "sb-footer-center" : ""}`} onClick={() => setUserMenuOpen(prev => !prev)}>
+      <div className={`sb-footer ${!sidebarOpen ? "sb-footer-center" : ""}`} ref={footerRef} onClick={() => setUserMenuOpen(prev => !prev)}>
         {sidebarOpen && (
-          <div style={{ color: "white" }}>
+          <div className="sb-footer-box">
             {token ? (
               <div className="sb-footer-user">
                 <span className="sb-footer-avatar">

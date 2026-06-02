@@ -12,6 +12,16 @@ const settingsSchema = new mongoose.Schema({
     default: "",
   },
 
+  voiceName: {
+    type: String,
+    default: "",
+  },
+
+  voiceLang: {
+    type: String,
+    default: "",
+  },
+
   theme: {
     type: String,
     default: "dark-navy",

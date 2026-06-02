@@ -4,7 +4,24 @@ import { X, Palette, Mic, Thermometer, Bot, ChevronDown, Check } from 'lucide-re
 import axios from 'axios'
 
 const THEME_OPTIONS = [
-  { value: 'dark-navy', label: 'Custom Dark Navy' },
+  // ── Dark ──
+  { value: 'dark-navy',       label: '🌑 Custom Dark Navy' },
+  { value: 'pure-black',      label: '⚫ Pure Black' },
+  { value: 'slate-gray',      label: '🩶 Slate Gray' },
+  { value: 'dark-mocha',      label: '🟤 Dark Mocha' },
+  { value: 'obsidian-warm',   label: '🔥 Obsidian Warm' },
+  { value: 'midnight-green',  label: '🌿 Midnight Green' },
+  // ── Light ──
+  { value: 'light',           label: '☀️  Light Mode' },
+  { value: 'soft-white',  label: '🤍 Soft White' },
+  { value: 'paper',           label: '📄 Paper' },
+  { value: 'cherry-blossom',  label: '🌸 Cherry Blossom' },
+  { value: 'sky',             label: '🩵 Sky' },
+  { value: 'fresh-mint',  label: '🌿 Fresh Mint' },
+  { value: 'peach',       label: '🍊 Peach' },
+  // ── Special ──
+  { value: 'cyberpunk',       label: '🟣 Cyberpunk' },
+  { value: 'hacker',      label: '⚡ Hacker' },
 ]
 
 const LLM_OPTIONS = [
@@ -114,7 +131,7 @@ function SettingSelect({ value, options, onChange, keyField = 'label', open, onT
   )
 }
 
-function Settings({ onClose, token, settings, setSettings, voices, selectedVoice, setSelectedVoice, handleVoiceChange }) {
+function Settings({ onClose, token, settings, setSettings, theme, onThemeChange, voices, selectedVoice, setSelectedVoice, handleVoiceChange }) {
   const [themeOpen, setThemeOpen] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
@@ -199,6 +216,7 @@ function Settings({ onClose, token, settings, setSettings, voices, selectedVoice
                   options={THEME_OPTIONS}
                   onChange={(opt) => {
                     setThemeName(opt.value);
+                    onThemeChange(opt.value);
                     updateSettings({
                       theme: opt.value
                     })
