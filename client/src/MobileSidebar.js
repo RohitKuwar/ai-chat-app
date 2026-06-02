@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, MessageSquare, Trash2, Search, X, Pencil, Loader2, PinOff, Pin, Settings, LogOut } from 'lucide-react'
 import { getInitials } from './Utils/getInitials';
 
@@ -6,6 +6,21 @@ function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, se
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+  const footerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        userMenuRef.current && !userMenuRef.current.contains(e.target) &&
+        footerRef.current && !footerRef.current.contains(e.target)
+      ) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSaveEdit = (chatId) => {
     if (!editTitle.trim()) {
@@ -151,7 +166,7 @@ function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, se
           <div>
             {
               userMenuOpen && (
-                <div className="sb-user-menu">
+                <div className="sb-user-menu" ref={userMenuRef}>
                   <button
                   className="sb-context-item" 
                   onClick={() => { 
@@ -182,7 +197,7 @@ function MobileSidebar({ mobSidebarOpen, setMobSidebarOpen, onToggle, search, se
       }
 
       {/* ── Footer ── */}
-      <div className="mob-sb-footer" style={{ marginTop: "auto" }} onClick={(e) => {
+      <div className="mob-sb-footer" ref={footerRef} style={{ marginTop: "auto" }} onClick={(e) => {
         e.stopPropagation(); 
         setUserMenuOpen(prev => !prev);
       }}>

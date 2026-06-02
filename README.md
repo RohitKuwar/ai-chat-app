@@ -137,6 +137,11 @@ npm start
 -Day 6: Implemented chat pinning functionality with persistent sidebar conversation prioritization, pin/unpin APIs, optimistic frontend updates, pinned-first chat sorting, scalable conversation organization architecture, and production-style AI workspace management UX.
 - Day 7: Built a centralized AI Settings system with user-specific preference management. Added configurable voice selection using browser Speech Synthesis voices, dedicated Settings modal architecture, persistent user settings APIs, preference storage for Voice, Theme, LLM Model, and Temperature, customizable AI response playback, and scalable personalization infrastructure for future AI product features.
 
+---
+
+### 🔹 Week 11 — User Preferences and AI Settings
+- Day 1: Implemented different themes for better user experience.
+
 ## 🚀 Current Capabilities
 
 - 💬 Chat with AI (context-aware)

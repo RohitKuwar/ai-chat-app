@@ -40,7 +40,7 @@ export const updateSettings = async (req, res) => {
       });
     }
 
-    const { voiceURI, theme, model, temperature } = req.body;
+    const { voiceURI, voiceName, voiceLang, theme, model, temperature } = req.body;
 
     const settings = await Settings.findOneAndUpdate(
       { userId },
@@ -48,6 +48,14 @@ export const updateSettings = async (req, res) => {
         $set: {
           ...(voiceURI !== undefined && {
             voiceURI,
+          }),
+
+          ...(voiceName !== undefined && {
+            voiceName,
+          }),
+
+          ...(voiceLang !== undefined && {
+            voiceLang,
           }),
 
           ...(theme !== undefined && {

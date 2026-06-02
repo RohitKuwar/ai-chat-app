@@ -96,6 +96,21 @@ function App() {
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'dark-navy'
+  })
+
+  // Apply theme to document on change
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'dark-navy') {
+      root.removeAttribute('data-theme')
+    } else {
+      root.setAttribute('data-theme', theme)
+    }
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
   const SUMMARY_THRESHOLD = 20;
   const FREE_CHAT_LIMIT = 10;
   const MAX_SIZE = 5 * 1024 * 1024;
@@ -129,16 +144,24 @@ function App() {
   useEffect(() => {
     if (!voices.length) return;
 
-    const savedVoice = voices.find((voice) => voice.voiceURI === settings.voiceURI);
+    let voice = null;
 
-    if (savedVoice) {
-      setSelectedVoice(savedVoice);
-    } else {
-      const defaultVoice = voices.find((voice) => voice.default);
+    voice = voices.find((v) => v.voiceURI === settings.voiceURI);
 
-      setSelectedVoice(defaultVoice || voices[0]);
+    if (!voice && settings.voiceLang) {
+      voice = voices.find((v) => v.lang === settings.voiceLang);
     }
-  }, [voices, settings.voiceURI]);
+
+    if (!voice) {
+      voice = voices.find((v) => v.default);
+    }
+
+    if (!voice) {
+      voice = voices[0];
+    }
+
+    setSelectedVoice(voice);
+  }, [voices, settings.voiceURI, settings.voiceLang]);
 
   useEffect(() => {
     if (token) {
@@ -334,13 +357,17 @@ function App() {
   const handleVoiceChange = async (voiceURI) => {
     const voice = voices.find((v) => v.voiceURI === voiceURI);
 
+    if (!voice) return;
+
     setSelectedVoice(voice);
 
     try {
       const res = await axios.put(
         `${process.env.REACT_APP_API_URL}/api/settings`,
         {
-          voiceURI,
+          voiceURI: voice.voiceURI,
+          voiceName: voice.name,
+          voiceLang: voice.lang,
         },
         {
           headers: {
@@ -1082,8 +1109,6 @@ function App() {
     speechSynthesis.cancel();
     const cleanedText = cleanTextForSpeech(text);
     const utterance = new SpeechSynthesisUtterance(cleanedText);
-    // const voices = speechSynthesis.getVoices();
-    // const preferredVoice = voices.find(v => v.name.includes("Google 日本語"));
 
     if (selectedVoice) {
       utterance.voice = selectedVoice;
@@ -1133,9 +1158,9 @@ function App() {
         {isMobile && (
           <div className="chat-header">
             {mobSidebarOpen ? (
-              <X size={16} onClick={mobToggleSidebar} title="Close menu" />
+              <X size={16} onClick={mobToggleSidebar} title="Close menu" color="var(--text-primary-soft)" />
             ) : (
-              <Menu size={16} onClick={mobToggleSidebar} title="Open menu" />
+              <Menu size={16} onClick={mobToggleSidebar} title="Open menu" color="var(--text-primary-soft)" />
             )}
 
             {/* <div style={{ display: "flex", gap: "10px", alignItems: "center" }}> */}
@@ -1615,6 +1640,8 @@ function App() {
             token={token}
             settings={settings}
             setSettings={setSettings}
+            theme={theme}
+            onThemeChange={setTheme}
             voices={voices}
             selectedVoice={selectedVoice}
             setSelectedVoice={setSelectedVoice}
