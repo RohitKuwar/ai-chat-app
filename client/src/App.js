@@ -424,7 +424,7 @@ function App() {
 
       // 🔥 Reuse same API
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/ai/chat`,
+        `http://localhost:5000/api/ai/chat`,
         {
           method: "POST",
           headers: {
@@ -434,6 +434,8 @@ function App() {
           body: JSON.stringify({
             messages: updatedMessages.slice(0, -1), // remove empty placeholder
             chatId: currentChatId,
+            model: settings.model,
+            temperature: settings.temperature ?? 0.5,
           }),
           signal: controller.signal,
         },
@@ -703,7 +705,7 @@ function App() {
 
       /* 🔥 STEP 2: Chat API */
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/ai/chat`,
+        `http://localhost:5000/api/ai/chat`,
         {
           method: "POST",
           headers: {
@@ -712,7 +714,9 @@ function App() {
           },
           body: JSON.stringify({
             messages: updatedMessages,
-            chatId: chatId
+            chatId: chatId,
+            model: settings.model,
+            temperature: settings.temperature ?? 0.5,
           }),
           signal: controller.signal,
         },

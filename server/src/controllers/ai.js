@@ -119,7 +119,10 @@ export const summarize = async (req, res) => {
 export const chat = async (req, res) => {
   const startTime = Date.now();
   try {
-    const { messages, mode, chatId, image } = req.body;
+    const { messages, mode, chatId, image, model, temperature } = req.body;
+
+    const selectedModel = ["gpt-4o-mini", "gpt-4o",].includes(model) ? model : "gpt-4o-mini";
+    const safeTemperature = Math.min(1, Math.max(0, Number(temperature ?? 0.5)));
 
     if (!messages || !messages.length) {
       return res.status(400).json({ error: "Messages required" });
@@ -232,7 +235,8 @@ export const chat = async (req, res) => {
 
     /* 🔥 SINGLE STREAM CALL (OPTIMIZED) */
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: selectedModel,
+      temperature: safeTemperature,
       messages: openAIMessages,
       tools,
       tool_choice: "auto",
@@ -248,7 +252,8 @@ export const chat = async (req, res) => {
 
     if (toolCalls.length === 0) {
     const stream = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: selectedModel,
+      temperature: safeTemperature,
       stream: true,
       messages: openAIMessages,
     });
@@ -305,7 +310,8 @@ export const chat = async (req, res) => {
     );
 
     const stream = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: selectedModel,
+      temperature: safeTemperature,
       stream: true,
       messages: [
         ...openAIMessages,
