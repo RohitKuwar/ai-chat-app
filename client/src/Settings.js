@@ -25,7 +25,8 @@ const THEME_OPTIONS = [
 ]
 
 const LLM_OPTIONS = [
-  { value: 'gpt-4o-mini', label: 'GPT 4o-mini' },
+  { value: 'gpt-4o-mini', label: '⚡ GPT-4o mini' },
+  { value: 'gpt-4o', label: '🧠 GPT-4o' },
 ]
 
 const TEMPERATURE_OPTIONS = [

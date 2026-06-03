@@ -140,7 +140,8 @@ npm start
 ---
 
 ### 🔹 Week 11 — User Preferences and AI Settings
-- Day 1: Implemented different themes for better user experience.
+- Day 1: Implemented a scalable theme architecture using CSS custom properties (variables).
+- Day 2: Implemented user-controlled temperature settings and added GPT-4o model support.
 
 ## 🚀 Current Capabilities
 
