@@ -2,7 +2,7 @@ import Chat from "../models/Chat.js";
 import { chunkText } from "../utils/chunkText.js";
 import { createEmbedding } from "../utils/createEmbedding.js";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
-import fs from "fs";
+import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 
 export const uploadFile = async (req, res) => {
   try {
@@ -20,16 +20,18 @@ export const uploadFile = async (req, res) => {
     let extractedText = "";
 
     if (file.mimetype.startsWith("image/")) {
-      const fileUrl = `${process.env.REACT_APP_API_URL}/uploads/${file.filename}`;
+
+      const uploaded = await uploadToCloudinary(file.buffer, file.originalname);
+
       return res.status(200).json({
         message: "Image uploaded successfully",
-        fileUrl,
-      });
+        fileUrl: uploaded.secure_url,
+      }); 
     }
 
     if (file.mimetype === "application/pdf") {
       const loadingTask = pdfjsLib.getDocument({
-        data: new Uint8Array(fs.readFileSync(file.path)),
+        data: new Uint8Array(file.buffer),
         useWorkerFetch: false,
         isEvalSupported: false,
         useSystemFonts: true,
@@ -52,7 +54,7 @@ export const uploadFile = async (req, res) => {
 
       extractedText = textContent;
     } else {
-      extractedText = fs.readFileSync(file.path, "utf-8");
+      extractedText = file.buffer.toString("utf-8");
     }
 
     const cleanText = extractedText.toLowerCase().replace(/\n/g, " ").replace(/\s+/g, " ").trim();
@@ -78,6 +80,10 @@ export const uploadFile = async (req, res) => {
       { new: true }
     );
 
+    const uploaded = await uploadToCloudinary(file.buffer, file.originalname);
+
+    const fileUrl = uploaded.secure_url;
+
     if (!updatedChat) {
       return res.status(404).json({ message: "Chat not found" });
     }
@@ -86,7 +92,7 @@ export const uploadFile = async (req, res) => {
       message: "File processed successfully",
       totalChunks: chunkEmbeddings.length,
       data: chunkEmbeddings,
-      fileUrl: `${process.env.REACT_APP_API_URL}/uploads/${file.filename}`
+      fileUrl
     });
 
   } catch (error) {
