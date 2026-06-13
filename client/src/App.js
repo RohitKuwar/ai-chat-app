@@ -424,7 +424,7 @@ function App() {
 
       // 🔥 Reuse same API
       const response = await fetch(
-        `http://localhost:5000/api/ai/chat`,
+        `${process.env.REACT_APP_API_URL}/api/ai/chat`,
         {
           method: "POST",
           headers: {
@@ -705,7 +705,7 @@ function App() {
 
       /* 🔥 STEP 2: Chat API */
       const response = await fetch(
-        `http://localhost:5000/api/ai/chat`,
+        `${process.env.REACT_APP_API_URL}/api/ai/chat`,
         {
           method: "POST",
           headers: {
